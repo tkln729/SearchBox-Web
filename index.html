@@ -61,29 +61,15 @@
 
     // 認証状態監視
     onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("mapSection").style.display = "block";
-        loadGoogleMaps();
-      } else {
-        document.getElementById("mapSection").style.display = "none";
-        document.getElementById("loginSection").style.display = "block";
-      }
-    });
-
-
-    onAuthStateChanged(auth, (user) => {
   if (user) {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("mapSection").style.display = "block";
     loadGoogleMaps();
 
-    // ✅ ユーザーIDをアナリティクスにセット
+    // ✅ アナリティクスにユーザー情報を渡す
     setUserId(analytics, user.uid);
-
-    // ✅ アクセスログを記録
     logEvent(analytics, 'login_success', {
-      email: user.email,
+      uid: user.uid,
       login_time: new Date().toISOString()
     });
   } else {
@@ -91,7 +77,6 @@
     document.getElementById("loginSection").style.display = "block";
   }
 });
-
 
     // Google Maps 読み込み＆表示
     function loadGoogleMaps() {
