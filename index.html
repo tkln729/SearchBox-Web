@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Box検索マップ</title>
+  <title>Box検索マップテスト状態</title>
   <style>
     #map { height: 80vh; width: 100%; }
     #loginSection, #mapSection { display: none; }
@@ -86,7 +86,15 @@
             lat: Number(place.lat),
             lng: Number(place.lng)
           };
-          new google.maps.Marker({ position: loc, map, title: place.name });
+          new google.maps.Marker({ 
+            position: loc,
+             map,
+              title: place.name,
+              icon: {
+                url: "./images/marker.png",
+                scaledSize: new google.maps.Size(32, 32)
+              }
+            });
         });
       };
       document.head.appendChild(script);
