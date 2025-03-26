@@ -91,10 +91,12 @@
              map,
               title: place.name,
               icon: {
-                url: "./images/marker.png",
+                url: place.icon,
                 scaledSize: new google.maps.Size(32, 32)
               }
             });
+            console.log("アイコンURL:", place.icon);
+
         });
       };
       document.head.appendChild(script);
