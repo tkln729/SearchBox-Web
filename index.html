@@ -26,6 +26,9 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+    import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+    import { getAnalytics, logEvent, setUserId } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+
 
    const firebaseConfig = {
     apiKey: "AIzaSyCTN_ErXKRtlQn97ukXYghZWpgq6Nmj-uQ",
@@ -41,6 +44,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
     const db = getFirestore(app);
+    const analytics = getAnalytics(app);
 
     // ログイン処理
     window.login = async function () {
@@ -67,6 +71,28 @@
         document.getElementById("loginSection").style.display = "block";
       }
     });
+
+
+    onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("mapSection").style.display = "block";
+    loadGoogleMaps();
+
+    // ✅ ユーザーIDをアナリティクスにセット
+    setUserId(analytics, user.uid);
+
+    // ✅ アクセスログを記録
+    logEvent(analytics, 'login_success', {
+      email: user.email,
+      login_time: new Date().toISOString()
+    });
+  } else {
+    document.getElementById("mapSection").style.display = "none";
+    document.getElementById("loginSection").style.display = "block";
+  }
+});
+
 
     // Google Maps 読み込み＆表示
     function loadGoogleMaps() {
@@ -103,6 +129,5 @@
       document.head.appendChild(script);
     }
   </script>
-
 </body>
 </html>
