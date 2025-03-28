@@ -125,6 +125,9 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+// 最初にグローバルにマーカーを保存する配列を用意
+const markers = [];
+
 window.initMap = async () => {
   const map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 35.43, lng: 139.92 },
@@ -132,24 +135,51 @@ window.initMap = async () => {
     restriction: { latLngBounds: { north: 45.6, south: 24.0, west: 122.9, east: 153.9 }, strictBounds: false }
   });
 
-  const snapshot = await getDocs(collection(db, "mapAllBox"));
+  const sharedInfoWindow = new google.maps.InfoWindow();
+
+  const snapshot = await getDocs(collection(db, "mapAllHub"));
   snapshot.forEach((doc) => {
     const data = doc.data();
     for (const key in data) {
       const place = data[key];
       if (!place.latlng || !place.name) continue;
 
-      const [lat, lng] = place.latlng.split(',').map(Number);
-      new markerWithLabel.MarkerWithLabel({
+      const [latStr, lngStr] = place.latlng.split(',').map(s => s.trim());
+      const lat = parseFloat(latStr);
+      const lng = parseFloat(lngStr);
+      if (isNaN(lat) || isNaN(lng)) continue;
+
+      const marker = new markerWithLabel.MarkerWithLabel({
         position: { lat, lng },
         map,
         labelContent: place.name,
         labelAnchor: new google.maps.Point(20, -10),
         labelClass: "marker-label"
       });
+
+      // 🔥 マーカー配列に保存（これが不足してました！）
+      const infoContent = `
+        <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
+          <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
+          <div>${place.area || ''}</div>
+          <div>${place.number || ''}</div>
+        </div>
+      `;
+
+      markers.push({
+        marker,
+        name: place.name,
+        infoContent,
+      });
+
+      marker.addListener("click", () => {
+        sharedInfoWindow.setContent(infoContent);
+        sharedInfoWindow.open(map, marker);
+      });
     }
   });
 };
+
 
 function loadGoogleMaps() {
   const script = document.createElement("script");
