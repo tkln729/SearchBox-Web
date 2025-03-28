@@ -254,9 +254,19 @@
               });
 
               marker.addListener("click", () => {
-                sharedInfoWindow.setContent(infoContent);
-                sharedInfoWindow.open(map, marker);
+                const newInfoWindow = new google.maps.InfoWindow({
+                  content: `
+                    <div style="padding:8px; font-size:14px;">
+                      <div style="font-weight:bold;margin-bottom:4px;">${place.name}</div>
+                      <div>${place.area || 'エリア情報なし'}</div>
+                      <div>${place.number || ''}</div>
+                    </div>
+                  `
+                });
+                newInfoWindow.open(map, marker);
               });
+
+
             }
           });
 
