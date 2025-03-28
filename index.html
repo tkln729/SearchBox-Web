@@ -138,7 +138,7 @@
         const lower = keyword.toLowerCase();
         const matches = markers.filter(m => m.name && m.name.toLowerCase().includes(lower));
         const numberMatch = m.number && m.number.toLowerCase().includes(lower);
-        return nameMatch || numberMatch;
+      
 
         if (matches.length === 0) {
           searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
