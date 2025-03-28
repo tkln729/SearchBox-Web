@@ -1,64 +1,58 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>基地局全体MAP</title>
-    <style>
-      #map { height: 80vh; width: 100%; }
-      #loginSection, #mapSection { display: none; }
-  
-      #loginSection {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 150px;
-        margin-top: 60px;
-      }
-  
-      #loginSection h2 { margin-bottom: 10px; }
-  
-      #loginSection input {
-        width: 400px;
-        padding: 8px;
-        font-size: 1rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        display: block;
-        margin-bottom: 16px;
-      }
-  
-      #loginSection button {
-        width: 160px;
-        padding: 10px;
-        font-size: 1rem;
-        background-color: #1976d2;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-  
-      #loginMessage { color: red; font-weight: bold; }
-  
-      .marker-label {
-        background-color: #1976d2;
-        color: #fff;
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: bold;
-        white-space: nowrap;
-      }
-    </style>
-  
-    <!-- MarkerWithLabel のみを残す -->
-    <script src="https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js"></script>
-  </head>
-  
+<head>
+  <title>基地局全体MAP</title>
+  <style>
+    #map { height: 80vh; width: 100%; }
+    #loginSection, #mapSection { display: none; }
 
+    #loginSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 150px;
+      margin-top: 60px;
+    }
+
+    #loginSection h2 { margin-bottom: 10px; }
+
+    #loginSection input {
+      width: 400px;
+      padding: 8px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    #loginSection button {
+      width: 160px;
+      padding: 10px;
+      font-size: 1rem;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #loginMessage { color: red; font-weight: bold; }
+
+    .marker-label {
+      background-color: #1976d2;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+  </style>
+
+  <!-- MarkerWithLabel ライブラリ -->
   <script src="https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY" async defer></script>
-
 </head>
 <body>
 <div id="loginSection">
