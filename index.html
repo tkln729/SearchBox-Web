@@ -5,8 +5,7 @@
   <style>
     #map { height: 80vh; width: 100%; }
     #loginSection, #mapSection { display: none; }
-  
-    /* 🔽 ログインセクション全体を縦並び中央揃えに */
+
     #loginSection {
       display: flex;
       flex-direction: column;
@@ -15,11 +14,11 @@
       gap: 150px;
       margin-top: 60px;
     }
-  
+
     #loginSection h2 {
       margin-bottom: 10px;
     }
-  
+
     #loginSection input {
       width: 400px;
       padding: 10px;
@@ -27,9 +26,9 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       display: block;
-      margin-bottom: 16px; /* ← ← ← 間隔を追加！ */
+      margin-bottom: 16px;
     }
-  
+
     #loginSection button {
       width: 160px;
       padding: 10px;
@@ -40,10 +39,20 @@
       border-radius: 4px;
       cursor: pointer;
     }
-  
+
     #loginMessage {
       color: red;
       font-weight: bold;
+    }
+
+    .marker-label {
+      background-color: #FF5722;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -57,26 +66,16 @@
   </div>
 
   <div id="mapSection">
-    <h2>千葉県BOX一覧表示MAP</h2> <!-- ←タイトル！ -->
+    <h2>千葉県BOX一覧表示MAP</h2>
     <button onclick="logout()">ログアウト</button>
     <div id="map"></div>
   </div>
 
+  <!-- Maps API（callbackなし） -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap" async></script>
-<script src="https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js"></script>
 
-<style>
-  /* ラベル用のカスタムスタイル */
-  .marker-label {
-    background-color: #FF5722;
-    color: #fff;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: bold;
-    white-space: nowrap;
-  }
-</style>
+  <!-- MarkerWithLabel ライブラリ -->
+  <script src="https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
@@ -84,8 +83,7 @@
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
     import { getAnalytics, logEvent, setUserId } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
 
-
-   const firebaseConfig = {
+    const firebaseConfig = {
     apiKey: "AIzaSyCTN_ErXKRtlQn97ukXYghZWpgq6Nmj-uQ",
     authDomain: "tellwebproject.firebaseapp.com",
     projectId: "tellwebproject",
@@ -101,7 +99,6 @@
     const db = getFirestore(app);
     const analytics = getAnalytics(app);
 
-    // ログイン処理
     window.login = async function () {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
@@ -112,31 +109,27 @@
       }
     };
 
-    // ログアウト
     window.logout = () => signOut(auth);
 
-    // 認証状態監視
     onAuthStateChanged(auth, (user) => {
-    if (user) {
-    document.getElementById("loginSection").style.display = "none";
-    document.getElementById("mapSection").style.display = "block";
-    loadGoogleMaps();
+      if (user) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("mapSection").style.display = "block";
 
-    // ✅ アナリティクスにユーザー情報を渡す
-    setUserId(analytics, user.uid);
-    logEvent(analytics, 'login_success', {
-      uid: user.uid,
-      login_time: new Date().toISOString()
-    });
-    } else {
-    document.getElementById("mapSection").style.display = "none";
-    document.getElementById("loginSection").style.display = "block";
-    }
+        initMap();
+
+        setUserId(analytics, user.uid);
+        logEvent(analytics, 'login_success', {
+          uid: user.uid,
+          login_time: new Date().toISOString()
+        });
+      } else {
+        document.getElementById("mapSection").style.display = "none";
+        document.getElementById("loginSection").style.display = "block";
+      }
     });
 
-    // Google Maps 読み込み＆表示
-  function loadGoogleMaps() {
-    window.initMap = async () => {
+    async function initMap() {
       const map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 35.43, lng: 139.92 },
         zoom: 10
@@ -145,8 +138,7 @@
       const snapshot = await getDocs(collection(db, "mapBox"));
       snapshot.forEach((doc) => {
         const place = doc.data();
-
-        const [lat, lng] = place.latlng.split(',').map(Number)
+        const [lat, lng] = place.latlng.split(',').map(Number);
         const loc = { lat, lng };
 
         new markerWithLabel.MarkerWithLabel({
@@ -164,10 +156,7 @@
 
         console.log("アイコンURL:", place.icon);
       });
-    };
-  }
-
-  loadGoogleMaps();
+    }
   </script>
 </body>
 </html>
