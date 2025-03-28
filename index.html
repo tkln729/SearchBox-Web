@@ -234,7 +234,8 @@
                 labelContent: `<div>${place.number}<br>${place.name}</div>`, // 表示したいラベル名
                 labelAnchor: new google.maps.Point(0, 0),
                 labelClass: "marker-label", // ラベルのCSSクラス
-                labelStyle: { opacity: 0.85 }
+                labelStyle: { opacity: 0.85 },
+                labelInBackground: true
               });
 
 
@@ -253,6 +254,7 @@
                 infoContent,
               });
 
+              console.log("イベント登録します", place.name);
               marker.addListener("click", () => {
                 const areaInfoWindow = new google.maps.InfoWindow({
                   content: `
