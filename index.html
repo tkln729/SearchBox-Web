@@ -169,6 +169,7 @@
           });
           item.addEventListener("click", () => {
             map.panTo(m.marker.getPosition());
+            map.setZoom(15); // ← ここでズームアップ
             sharedInfoWindow.setContent(m.infoContent);
             sharedInfoWindow.open(map, m.marker);
             searchResults.style.display = "none";
