@@ -40,17 +40,22 @@
       font-weight: bold;
     }
     .marker-label {
-      background-color: white;
-      border: 1px solid #888;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
+    background-color: #00568b; /* 薄い青（ライトスカイブルー） */
+    color: white;             /* 文字色を白に設定 */
+    border: 1px solid #888;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
   </style>
   <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js"></script>
   <!-- 追加のMarkerWithLabelライブラリ読み込み -->
   <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerwithlabel/dist/index.min.js"></script>
+  <!-- MarkerClustererライブラリの追加 -->
+  <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+
 </head>
 <body>
   <div id="loginSection">
@@ -240,6 +245,16 @@
               });
             }
           });
+
+
+          // markers配列にマーカーを追加し終えた後に以下のコードを追加
+          const clusterer = new markerClusterer.MarkerClusterer({ 
+            map: map, 
+            markers: markers.map(m => m.marker),
+          });
+
+
+
         } catch (err) {
           console.error("Firestore 読み込み失敗：", err);
         }
