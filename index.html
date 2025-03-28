@@ -234,7 +234,8 @@
                 labelContent: `<div>${place.number}<br>${place.name}</div>`, // 表示したいラベル名
                 labelAnchor: new google.maps.Point(0, 0),
                 labelClass: "marker-label", // ラベルのCSSクラス
-                labelStyle: { opacity: 0.85 }
+                labelStyle: { opacity: 0.85 },
+                labelInBackground: true
               });
 
 
@@ -253,7 +254,7 @@
                 infoContent,
               });
 
-              marker.addListener("click", () => {
+              google.maps.event.addListener(marker, 'click', () => {
                 const newInfoWindow = new google.maps.InfoWindow({
                   content: `
                     <div style="padding:8px; font-size:14px;">
