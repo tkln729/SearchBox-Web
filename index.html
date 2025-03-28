@@ -183,8 +183,7 @@
       }
 
       const script = document.createElement("script");
-      //script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
-      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I";
+      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
       script.async = true;
       
 
@@ -235,8 +234,7 @@
                 labelContent: `<div>${place.number}<br>${place.name}</div>`, // 表示したいラベル名
                 labelAnchor: new google.maps.Point(0, 0),
                 labelClass: "marker-label", // ラベルのCSSクラス
-                labelStyle: { opacity: 0.85 },
-                labelInBackground: true
+                labelStyle: { opacity: 0.85 }
               });
 
 
@@ -255,18 +253,10 @@
                 infoContent,
               });
 
-              console.log("イベント登録します", place.name);
               marker.addListener("click", () => {
-                const areaInfoWindow = new google.maps.InfoWindow({
-                  content: `
-                    <div style="padding:4px 8px; font-size:13px;">
-                      ${place.area || 'エリア情報なし'}
-                    </div>
-                  `,
-                });
-                areaInfoWindow.open(map, marker);
+                sharedInfoWindow.setContent(infoContent);
+                sharedInfoWindow.open(map, marker);
               });
-
             }
           });
 
