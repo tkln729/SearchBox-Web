@@ -13,7 +13,9 @@
       gap: 150px;
       margin-top: 60px;
     }
-    #loginSection h2 { margin-bottom: 10px; }
+    #loginSection h2 {
+      margin-bottom: 10px;
+    }
     #loginSection input {
       width: 400px;
       padding: 8px;
@@ -33,18 +35,12 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    #loginMessage { color: red; font-weight: bold; }
-    .marker-label {
-      background-color: #1976d2;
-      color: #fff;
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 12px;
+    #loginMessage {
+      color: red;
       font-weight: bold;
-      white-space: nowrap;
     }
   </style>
-  <script src="https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js"></script>
 </head>
 <body>
   <div id="loginSection">
@@ -76,13 +72,13 @@
     import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
 
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID",
-      measurementId: "YOUR_MEASUREMENT_ID"
+      apiKey: "AIzaSyCTN_ErXKRtlQn97ukXYghZWpgq6Nmj-uQ",
+      authDomain: "tellwebproject.firebaseapp.com",
+      projectId: "tellwebproject",
+      storageBucket: "tellwebproject.firebasestorage.app",
+      messagingSenderId: "845001095725",
+      appId: "1:845001095725:web:5de6c8b20e102348be96a4",
+      measurementId: "G-20XPSVYFB6"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -102,10 +98,6 @@
 
     window.logout = () => signOut(auth);
 
-    let map;
-    const markers = [];
-    let sharedInfoWindow;
-
     onAuthStateChanged(auth, (user) => {
       if (user) {
         document.getElementById("loginSection").style.display = "none";
@@ -118,28 +110,143 @@
       }
     });
 
-    window.initMap = async () => {
-      map = new google.maps.Map(document.getElementById("map"), { center: { lat: 35.43, lng: 139.92 }, zoom: 10 });
-      sharedInfoWindow = new google.maps.InfoWindow();
-
-      const snapshot = await getDocs(collection(db, "mapAllHub"));
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        for (const key in data) {
-          const place = data[key];
-          if (!place.latlng || !place.name) continue;
-          const [lat, lng] = place.latlng.split(',').map(Number);
-          if (isNaN(lat) || isNaN(lng)) continue;
-          const marker = new markerWithLabel.MarkerWithLabel({ position: { lat, lng }, map, labelContent: place.name, labelAnchor: new google.maps.Point(20, -10), labelClass: "marker-label" });
-          markers.push({ marker, name: place.name });
-        }
-      });
-    };
-
     function loadGoogleMaps() {
+      let map;
+      const markers = [];
+      const searchInput = document.getElementById("searchInput");
+      const searchButton = document.getElementById("searchButton");
+      const searchResults = document.getElementById("searchResults");
+
+      function showSearchSuggestions(keyword) {
+        const lower = keyword.toLowerCase();
+        const matches = markers.filter(m => m.name && m.name.toLowerCase().includes(lower));
+
+        if (matches.length === 0) {
+          searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
+          searchResults.style.display = "block";
+          return;
+        }
+
+        searchResults.innerHTML = "";
+        matches.forEach((m) => {
+          const item = document.createElement("div");
+          item.textContent = m.name;
+          item.style.padding = "6px";
+          item.style.cursor = "pointer";
+          item.style.borderBottom = "1px solid #eee";
+          item.addEventListener("mouseover", () => {
+            item.style.backgroundColor = "#f0f0f0";
+          });
+          item.addEventListener("mouseout", () => {
+            item.style.backgroundColor = "";
+          });
+          item.addEventListener("click", () => {
+            map.panTo(m.marker.getPosition());
+            sharedInfoWindow.setContent(m.infoContent);
+            sharedInfoWindow.open(map, m.marker);
+            searchResults.style.display = "none";
+            searchInput.value = m.name;
+            logEvent(analytics, 'search_used');
+          });
+          searchResults.appendChild(item);
+        });
+
+        searchResults.style.display = "block";
+      }
+
       const script = document.createElement("script");
       script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
       script.async = true;
+
+      let sharedInfoWindow;
+
+      window.initMap = async () => {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 35.43, lng: 139.92 },
+          zoom: 10,
+          restriction: {
+            latLngBounds: {
+              north: 45.6,
+              south: 24.0,
+              west: 122.9,
+              east: 153.9
+            },
+            strictBounds: false
+          }
+        });
+
+        sharedInfoWindow = new google.maps.InfoWindow();
+
+        try {
+          const snapshot = await getDocs(collection(db, "mapAllHub"));
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+
+            for (const key in data) {
+              const place = data[key];
+              if (!place.latlng || !place.name) continue;
+
+              const [latStr, lngStr] = place.latlng.split(',').map(s => s.trim());
+              const lat = parseFloat(latStr);
+              const lng = parseFloat(lngStr);
+              if (isNaN(lat) || isNaN(lng)) continue;
+
+              const loc = { lat, lng };
+
+              const marker = new google.maps.Marker({
+                position: loc,
+                map,
+                title: place.name,
+                icon: {
+                  url: place.icon,
+                  scaledSize: new google.maps.Size(48, 48)
+                }
+              });
+
+              const infoContent = `
+                <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
+                  <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
+                  <div>${place.area || ''}</div>
+                  <div>${place.number || ''}</div>
+                </div>
+              `;
+
+              markers.push({
+                marker,
+                name: place.name,
+                infoContent,
+              });
+
+              marker.addListener("click", () => {
+                sharedInfoWindow.setContent(infoContent);
+                sharedInfoWindow.open(map, marker);
+              });
+            }
+          });
+        } catch (err) {
+          console.error("Firestore 読み込み失敗：", err);
+        }
+      };
+
+      searchInput.addEventListener("input", () => {
+        const keyword = searchInput.value.trim();
+        if (keyword) {
+          showSearchSuggestions(keyword);
+        } else {
+          searchResults.style.display = "none";
+        }
+      });
+
+      searchInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          const firstMatch = searchResults.querySelector("div");
+          if (firstMatch) {
+            firstMatch.click();
+            e.preventDefault();
+          }
+        }
+      });
+
       document.head.appendChild(script);
     }
   </script>
