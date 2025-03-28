@@ -5,7 +5,6 @@
   <style>
     #map { height: 80vh; width: 100%; }
     #loginSection, #mapSection { display: none; }
-
     #loginSection {
       display: flex;
       flex-direction: column;
@@ -14,9 +13,9 @@
       gap: 150px;
       margin-top: 60px;
     }
-
-    #loginSection h2 { margin-bottom: 10px; }
-
+    #loginSection h2 {
+      margin-bottom: 10px;
+    }
     #loginSection input {
       width: 400px;
       padding: 8px;
@@ -26,7 +25,6 @@
       display: block;
       margin-bottom: 16px;
     }
-
     #loginSection button {
       width: 160px;
       padding: 10px;
@@ -37,133 +35,124 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
-    #loginMessage { color: red; font-weight: bold; }
+    #loginMessage {
+      color: red;
+      font-weight: bold;
+    }
 
     .marker-label {
-      background-color: #1976d2;
-      color: #fff;
+      background-color: white;
       padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: bold;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 13px;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
       white-space: nowrap;
     }
   </style>
-
-  <!-- MarkerWithLabel ライブラリ -->
-  <script src="https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerwithlabel/dist/index.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js"></script>
 </head>
 <body>
-<div id="loginSection">
-  <h2>ログインしてください</h2>
-  <input type="email" id="email" placeholder="メールアドレス">
-  <input type="password" id="password" placeholder="パスワード">
-  <button onclick="login()">ログイン</button>
-  <p id="loginMessage"></p>
-</div>
+  <!-- HTMLコンテンツは省略 -->
 
-<div id="mapSection">
-  <h2>千葉県N基地局一覧MAP</h2>
-  <button onclick="logout()">ログアウト</button>
+  <script type="module">
+    // Firebaseの設定は省略（元のコードを使用）
 
-  <div style="margin: 10px 0; position: relative;">
-    <input type="text" id="searchInput" placeholder="基地局名で検索"
-           style="padding:6px; width:250px; font-size:1rem;">
-    <button id="searchButton" style="padding:6px 12px; font-size:1rem;">検索</button>
-    <div id="searchResults"
-         style="background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto;
-                position:absolute; top:40px; z-index:1000; width:250px; display:none;"></div>
-  </div>
+    window.login = async function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        document.getElementById("loginMessage").innerText = "ログイン失敗: " + error.message;
+      }
+    };
 
-  <div id="map"></div>
-</div>
+    window.logout = () => signOut(auth);
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
-import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("mapSection").style.display = "block";
+        loadGoogleMaps();
+        logEvent(analytics, 'map_viewed');
+      } else {
+        document.getElementById("mapSection").style.display = "none";
+        document.getElementById("loginSection").style.display = "block";
+      }
+    });
 
-const firebaseConfig = { /* Your Firebase Config */ };
+    function loadGoogleMaps() {
+      let map;
+      const markers = [];
+      const searchInput = document.getElementById("searchInput");
+      const searchResults = document.getElementById("searchResults");
+      let sharedInfoWindow;
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore(app);
-const analytics = getAnalytics(app);
+      const script = document.createElement("script");
+      script.src = "https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap";
+      script.async = true;
 
-window.login = async function() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-  } catch (error) {
-    document.getElementById("loginMessage").innerText = "ログイン失敗: " + error.message;
-  }
-};
+      window.initMap = async () => {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 35.43, lng: 139.92 },
+          zoom: 10
+        });
 
-window.logout = () => signOut(auth);
+        sharedInfoWindow = new google.maps.InfoWindow();
 
-let map;
-const markers = [];
-let sharedInfoWindow;
+        try {
+          const snapshot = await getDocs(collection(db, "mapAllHub"));
+          snapshot.forEach((doc) => {
+            const data = doc.data();
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    document.getElementById("loginSection").style.display = "none";
-    document.getElementById("mapSection").style.display = "block";
-    loadGoogleMaps();
-    logEvent(analytics, 'map_viewed');
-  } else {
-    document.getElementById("mapSection").style.display = "none";
-    document.getElementById("loginSection").style.display = "block";
-  }
-});
+            for (const key in data) {
+              const place = data[key];
+              if (!place.latlng || !place.name) continue;
 
-window.initMap = async () => {
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 35.43, lng: 139.92 },
-    zoom: 10
-  });
+              const [latStr, lngStr] = place.latlng.split(',').map(s => s.trim());
+              const lat = parseFloat(latStr);
+              const lng = parseFloat(lngStr);
+              if (isNaN(lat) || isNaN(lng)) continue;
 
-  sharedInfoWindow = new google.maps.InfoWindow();
+              const loc = { lat, lng };
 
-  const snapshot = await getDocs(collection(db, "mapAllHub"));
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    for (const key in data) {
-      const place = data[key];
-      if (!place.latlng || !place.name) continue;
+              const marker = new markerWithLabel.MarkerWithLabel({
+                position: loc,
+                map,
+                labelContent: place.name,
+                labelAnchor: new google.maps.Point(30, 0),
+                labelClass: "marker-label",
+                icon: {
+                  url: place.icon,
+                  scaledSize: new google.maps.Size(48, 48)
+                }
+              });
 
-      const [lat, lng] = place.latlng.split(',').map(Number);
-      if (isNaN(lat) || isNaN(lng)) continue;
+              const infoContent = `
+                <div>
+                  <strong>${place.name}</strong><br>
+                  ${place.area || ''}<br>
+                  ${place.number || ''}
+                </div>
+              `;
 
-      const marker = new markerWithLabel.MarkerWithLabel({
-        position: { lat, lng },
-        map,
-        labelContent: place.name,
-        labelAnchor: new google.maps.Point(20, -10),
-        labelClass: "marker-label"
-      });
+              markers.push({ marker, name: place.name, infoContent });
 
-      const infoContent = `<div><strong>${place.name}</strong><br>${place.area || ''}<br>${place.number || ''}</div>`;
+              marker.addListener("click", () => {
+                sharedInfoWindow.setContent(infoContent);
+                sharedInfoWindow.open(map, marker);
+              });
+            }
+          });
+        } catch (err) {
+          console.error("Firestore 読み込み失敗：", err);
+        }
+      };
 
-      markers.push({ marker, name: place.name, infoContent });
-
-      marker.addListener("click", () => {
-        sharedInfoWindow.setContent(infoContent);
-        sharedInfoWindow.open(map, marker);
-      });
+      document.head.appendChild(script);
     }
-  });
-};
-
-function loadGoogleMaps() {
-  const script = document.createElement("script");
-  script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
-  script.async = true;
-  document.head.appendChild(script);
-}
-</script>
+  </script>
 </body>
 </html>
