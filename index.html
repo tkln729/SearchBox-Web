@@ -81,6 +81,10 @@
     </div>
     <div id="map"></div>
   </div>
+  <div id="areaInfo" style="padding:10px; font-size:16px; background:#f0f0f0; border-top:1px solid #ccc;">
+    ここにエリア情報が表示されます
+  </div>
+  
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
@@ -256,6 +260,19 @@
               marker.addListener("click", () => {
                 sharedInfoWindow.setContent(infoContent);
                 sharedInfoWindow.open(map, marker);
+
+                 // ↓ 地図下にエリア情報を表示！
+                const areaInfoDiv = document.getElementById("areaInfo");
+                areaInfoDiv.textContent = `エリア: ${place.area || '情報なし'}`;
+
+                areaInfoDiv.innerHTML = `
+                <strong>${place.name}</strong><br>
+                エリア: ${place.area || '情報なし'}<br>
+                番号: ${place.number || '不明'}
+              `;
+
+
+
               });
             }
           });
