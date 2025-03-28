@@ -173,7 +173,6 @@
             sharedInfoWindow.setContent(m.infoContent);
             sharedInfoWindow.open(map, m.marker);
             searchResults.style.display = "none";
-            searchInput.value = "";
             searchInput.value = m.name;
             logEvent(analytics, 'search_used');
           });
@@ -295,6 +294,11 @@
           }
         }
       });
+      searchInput.addEventListener("focus", () => {
+        searchInput.value = "";
+        searchResults.style.display = "none"; // 検索候補も非表示にする（任意）
+      });
+
 
       document.head.appendChild(script);
     }
