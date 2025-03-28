@@ -173,6 +173,7 @@
             sharedInfoWindow.setContent(m.infoContent);
             sharedInfoWindow.open(map, m.marker);
             searchResults.style.display = "none";
+            searchInput.value = "";
             searchInput.value = m.name;
             logEvent(analytics, 'search_used');
           });
