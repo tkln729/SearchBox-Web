@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Box検索マップ</title>
+  <title>Box全体MAP</title>
   <style>
     #map { height: 80vh; width: 100%; }
     #loginSection, #mapSection { display: none; }
@@ -15,13 +15,11 @@
       margin-top: 60px;
     }
 
-    #loginSection h2 {
-      margin-bottom: 10px;
-    }
+    #loginSection h2 { margin-bottom: 10px; }
 
     #loginSection input {
       width: 400px;
-      padding: 10px;
+      padding: 8px;
       font-size: 1rem;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -40,13 +38,10 @@
       cursor: pointer;
     }
 
-    #loginMessage {
-      color: red;
-      font-weight: bold;
-    }
+    #loginMessage { color: red; font-weight: bold; }
 
     .marker-label {
-      background-color: #FF5722;
+      background-color: #1976d2;
       color: #fff;
       padding: 2px 6px;
       border-radius: 6px;
@@ -55,108 +50,113 @@
       white-space: nowrap;
     }
   </style>
+
+  <script src="https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY" async defer></script>
+
 </head>
 <body>
-  <div id="loginSection">
-    <h2>ログインしてください</h2>
-    <input type="email" id="email" placeholder="メールアドレス">
-    <input type="password" id="password" placeholder="パスワード">
-    <button onclick="login()">ログイン</button>
-    <p id="loginMessage"></p>
+<div id="loginSection">
+  <h2>ログインしてください</h2>
+  <input type="email" id="email" placeholder="メールアドレス">
+  <input type="password" id="password" placeholder="パスワード">
+  <button onclick="login()">ログイン</button>
+  <p id="loginMessage"></p>
+</div>
+
+<div id="mapSection">
+  <h2>千葉県Box一覧MAP</h2>
+  <button onclick="logout()">ログアウト</button>
+
+  <div style="margin: 10px 0; position: relative;">
+    <input type="text" id="searchInput" placeholder="Boxを検索"
+           style="padding:6px; width:250px; font-size:1rem;">
+    <button id="searchButton" style="padding:6px 12px; font-size:1rem;">検索</button>
+    <div id="searchResults"
+         style="background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto;
+                position:absolute; top:40px; z-index:1000; width:250px; display:none;"></div>
   </div>
 
-  <div id="mapSection">
-    <h2>千葉県BOX一覧表示MAP</h2>
-    <button onclick="logout()">ログアウト</button>
-    <div id="map"></div>
-  </div>
+  <div id="map"></div>
+</div>
 
-  <!-- Maps API（callbackなし） -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap" async></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
 
-  <!-- MarkerWithLabel ライブラリ -->
-  <script src="https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js"></script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCTN_ErXKRtlQn97ukXYghZWpgq6Nmj-uQ",
+  authDomain: "tellwebproject.firebaseapp.com",
+  projectId: "tellwebproject",
+  storageBucket: "tellwebproject.firebasestorage.app",
+  messagingSenderId: "845001095725",
+  appId: "1:845001095725:web:5de6c8b20e102348be96a4",
+  measurementId: "G-20XPSVYFB6"
+};
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
-    import { getAnalytics, logEvent, setUserId } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore(app);
+const analytics = getAnalytics(app);
 
-    const firebaseConfig = {
-    apiKey: "AIzaSyCTN_ErXKRtlQn97ukXYghZWpgq6Nmj-uQ",
-    authDomain: "tellwebproject.firebaseapp.com",
-    projectId: "tellwebproject",
-    storageBucket: "tellwebproject.firebasestorage.app",
-    messagingSenderId: "845001095725",
-    appId: "1:845001095725:web:5de6c8b20e102348be96a4",
-    measurementId: "G-20XPSVYFB6"
-    };
+window.login = async function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    document.getElementById("loginMessage").innerText = "ログイン失敗: " + error.message;
+  }
+};
 
+window.logout = () => signOut(auth);
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
-    const db = getFirestore(app);
-    const analytics = getAnalytics(app);
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("mapSection").style.display = "block";
+    loadGoogleMaps();
+    logEvent(analytics, 'map_viewed');
+  } else {
+    document.getElementById("mapSection").style.display = "none";
+    document.getElementById("loginSection").style.display = "block";
+  }
+});
 
-    window.login = async function () {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (error) {
-        document.getElementById("loginMessage").innerText = "ログイン失敗: " + error.message;
-      }
-    };
+window.initMap = async () => {
+  const map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 35.43, lng: 139.92 },
+    zoom: 10,
+    restriction: { latLngBounds: { north: 45.6, south: 24.0, west: 122.9, east: 153.9 }, strictBounds: false }
+  });
 
-    window.logout = () => signOut(auth);
+  const snapshot = await getDocs(collection(db, "mapAllBox"));
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    for (const key in data) {
+      const place = data[key];
+      if (!place.latlng || !place.name) continue;
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("mapSection").style.display = "block";
-
-        initMap();
-
-        setUserId(analytics, user.uid);
-        logEvent(analytics, 'login_success', {
-          uid: user.uid,
-          login_time: new Date().toISOString()
-        });
-      } else {
-        document.getElementById("mapSection").style.display = "none";
-        document.getElementById("loginSection").style.display = "block";
-      }
-    });
-
-    async function initMap() {
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 35.43, lng: 139.92 },
-        zoom: 10
-      });
-
-      const snapshot = await getDocs(collection(db, "mapBox"));
-      snapshot.forEach((doc) => {
-        const place = doc.data();
-        const [lat, lng] = place.latlng.split(',').map(Number);
-        const loc = { lat, lng };
-
-        new markerWithLabel.MarkerWithLabel({
-          position: loc,
-          map: map,
-          icon: {
-            url: place.icon,
-            scaledSize: new google.maps.Size(48, 48)
-          },
-          labelContent: place.name,
-          labelAnchor: new google.maps.Point(25, -10),
-          labelClass: "marker-label",
-          labelInBackground: false
-        });
-
-        console.log("アイコンURL:", place.icon);
+      const [lat, lng] = place.latlng.split(',').map(Number);
+      new markerWithLabel.MarkerWithLabel({
+        position: { lat, lng },
+        map,
+        labelContent: place.name,
+        labelAnchor: new google.maps.Point(20, -10),
+        labelClass: "marker-label"
       });
     }
-  </script>
+  });
+};
+
+function loadGoogleMaps() {
+  const script = document.createElement("script");
+  script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
+  script.async = true;
+  document.head.appendChild(script);
+}
+</script>
 </body>
 </html>
