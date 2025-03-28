@@ -5,6 +5,46 @@
   <style>
     #map { height: 80vh; width: 100%; }
     #loginSection, #mapSection { display: none; }
+  
+    /* 🔽 ログインセクション全体を縦並び中央揃えに */
+    #loginSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 150px;
+      margin-top: 60px;
+    }
+  
+    #loginSection h2 {
+      margin-bottom: 10px;
+    }
+  
+    #loginSection input {
+      width: 400px;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      display: block;
+      margin-bottom: 16px; /* ← ← ← 間隔を追加！ */
+    }
+  
+    #loginSection button {
+      width: 160px;
+      padding: 10px;
+      font-size: 1rem;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  
+    #loginMessage {
+      color: red;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -22,6 +62,22 @@
     <div id="map"></div>
   </div>
 
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap" async></script>
+<script src="https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js"></script>
+
+<style>
+  /* ラベル用のカスタムスタイル */
+  .marker-label {
+    background-color: #FF5722;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+</style>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
@@ -37,7 +93,7 @@
     messagingSenderId: "845001095725",
     appId: "1:845001095725:web:5de6c8b20e102348be96a4",
     measurementId: "G-20XPSVYFB6"
-  };
+    };
 
 
     const app = initializeApp(firebaseConfig);
@@ -61,7 +117,7 @@
 
     // 認証状態監視
     onAuthStateChanged(auth, (user) => {
-  if (user) {
+    if (user) {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("mapSection").style.display = "block";
     loadGoogleMaps();
@@ -72,46 +128,46 @@
       uid: user.uid,
       login_time: new Date().toISOString()
     });
-  } else {
+    } else {
     document.getElementById("mapSection").style.display = "none";
     document.getElementById("loginSection").style.display = "block";
-  }
-});
+    }
+    });
 
     // Google Maps 読み込み＆表示
-    function loadGoogleMaps() {
-      const script = document.createElement("script");
-      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
-      script.async = true;
-      window.initMap = async () => {
-        const map = new google.maps.Map(document.getElementById("map"), {
-          center: { lat: 35.43, lng: 139.92 },
-          zoom: 10
+  function loadGoogleMaps() {
+    window.initMap = async () => {
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 35.43, lng: 139.92 },
+        zoom: 10
+      });
+
+      const snapshot = await getDocs(collection(db, "mapBox"));
+      snapshot.forEach((doc) => {
+        const place = doc.data();
+
+        const [lat, lng] = place.latlng.split(',').map(Number)
+        const loc = { lat, lng };
+
+        new markerWithLabel.MarkerWithLabel({
+          position: loc,
+          map: map,
+          icon: {
+            url: place.icon,
+            scaledSize: new google.maps.Size(48, 48)
+          },
+          labelContent: place.name,
+          labelAnchor: new google.maps.Point(25, -10),
+          labelClass: "marker-label",
+          labelInBackground: false
         });
 
-        const snapshot = await getDocs(collection(db, "mapBox"));
-        snapshot.forEach((doc) => {
-          const place = doc.data();
+        console.log("アイコンURL:", place.icon);
+      });
+    };
+  }
 
-          // latlng をカンマで分割して数値化
-          const [lat, lng] = place.latlng.split(',').map(Number)
-          const loc = { lat, lng };
-          
-          new google.maps.Marker({ 
-            position: loc,
-             map,
-              title: place.name,
-              icon: {
-                url: place.icon,
-                scaledSize: new google.maps.Size(48, 48)
-              }
-            });
-            console.log("アイコンURL:", place.icon);
-
-        });
-      };
-      document.head.appendChild(script);
-    }
+  loadGoogleMaps();
   </script>
 </body>
 </html>
