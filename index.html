@@ -235,7 +235,6 @@
                 labelAnchor: new google.maps.Point(0, 0),
                 labelClass: "marker-label", // ラベルのCSSクラス
                 labelStyle: { opacity: 0.85 },
-                labelInBackground: false
               });
 
 
@@ -262,26 +261,14 @@
           });
 
 
-// ★ここが大事な修正ポイント（クリックイベントを確実に付与）
-setTimeout(() => {
-  const labelDiv = marker.labelDiv;
-  if (labelDiv) {
-    labelDiv.style.cursor = "pointer"; // カーソルをポインターに
-    labelDiv.addEventListener("click", (event) => {
-      event.stopPropagation(); // 親要素にイベントを伝えない
-      const newInfoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding:8px; font-size:14px;">
-            <div style="font-weight:bold;margin-bottom:4px;">${place.name}</div>
-            <div>${place.area || 'エリア情報なし'}</div>
-            <div>${place.number || ''}</div>
-          </div>
-        `
-      });
-      newInfoWindow.open(map, marker);
-    });
-  }
-}, 200);
+          // markers配列にマーカーを追加し終えた後に以下のコードを追加
+          const clusterer = new markerClusterer.MarkerClusterer({ 
+            map: map, 
+            markers: markers.map(m => m.marker),
+            minimumClusterSize: 3,  // 3個以上でクラスタ表示
+            gridSize: 50,           // クラスタリング範囲のピクセル数
+          });
+
 
 
         } catch (err) {
