@@ -207,7 +207,7 @@
         sharedInfoWindow = new google.maps.InfoWindow();
 
         try {
-          const snapshot = await getDocs(collection(db, "mapAllHub"));
+          const snapshot = await getDocs(collection(db, "mapAllBox"));
           snapshot.forEach((doc) => {
             const data = doc.data();
 
