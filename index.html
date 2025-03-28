@@ -128,7 +128,7 @@ window.initMap = async () => {
 
   sharedInfoWindow = new google.maps.InfoWindow();
 
-  const snapshot = await getDocs(collection(db, "mapAllBox"));
+  const snapshot = await getDocs(collection(db, "mapAllHub"));
   snapshot.forEach((doc) => {
     const data = doc.data();
     for (const key in data) {
