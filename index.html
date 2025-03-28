@@ -217,9 +217,9 @@
 
             for (const key in data) {
               const place = data[key];
-              if (!place.latlng || !place.name) continue;
+              if (!place.position || !place.name) continue;
 
-              const [latStr, lngStr] = place.latlng.split(',').map(s => s.trim());
+              const [latStr, lngStr] = place.position.split(',').map(s => s.trim());
               const lat = parseFloat(latStr);
               const lng = parseFloat(lngStr);
               if (isNaN(lat) || isNaN(lng)) continue;
