@@ -251,6 +251,8 @@
           const clusterer = new markerClusterer.MarkerClusterer({ 
             map: map, 
             markers: markers.map(m => m.marker),
+            minimumClusterSize: 3,  // 3個以上でクラスタ表示
+            gridSize: 50,           // クラスタリング範囲のピクセル数
           });
 
 
