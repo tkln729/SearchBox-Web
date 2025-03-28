@@ -266,9 +266,12 @@
                 areaInfoDiv.textContent = `エリア: ${place.area || '情報なし'}`;
 
                 areaInfoDiv.innerHTML = `
-                <strong>${place.name}</strong>
-                エリア: ${place.area || '情報なし'}<br>
-                番号: ${place.number || '不明'}
+                <strong>${place.organization}${place.number }${place.name}</strong>
+                エリア: ${place.area || '情報なし'}
+                タイプ: ${place.type || '不明'}
+                周期: ${place.cycle || '情報なし'}
+                担当: ${place.poc || '不明'}
+                住所: ${place.address || '不明'}
               `;
 
 
