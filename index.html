@@ -39,8 +39,18 @@
       color: red;
       font-weight: bold;
     }
+    .marker-label {
+      background-color: white;
+      border: 1px solid #888;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
   </style>
   <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js"></script>
+  <!-- 追加のMarkerWithLabelライブラリ読み込み -->
+  <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerwithlabel/dist/index.min.js"></script>
 </head>
 <body>
   <div id="loginSection">
@@ -157,6 +167,7 @@
       const script = document.createElement("script");
       script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
       script.async = true;
+      
 
       let sharedInfoWindow;
 
@@ -193,15 +204,21 @@
 
               const loc = { lat, lng };
 
-              const marker = new google.maps.Marker({
+               // MarkerWithLabelを使用したマーカー
+              const marker = new markerWithLabel.MarkerWithLabel({
                 position: loc,
-                map,
+                map: map,
                 title: place.name,
                 icon: {
                   url: place.icon,
                   scaledSize: new google.maps.Size(48, 48)
-                }
+                },
+                labelContent: place.name, // 表示したいラベル名
+                labelAnchor: new google.maps.Point(0, 0),
+                labelClass: "marker-label", // ラベルのCSSクラス
+                labelStyle: { opacity: 0.85 }
               });
+
 
               const infoContent = `
                 <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
@@ -250,5 +267,6 @@
       document.head.appendChild(script);
     }
   </script>
+</style>
 </body>
 </html>
