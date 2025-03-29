@@ -182,7 +182,7 @@
     function loadGoogleMaps() {
       let map;
       const markers = [];// すべてのマーカー（mapに表示されていなくても全保持）
-      const visibleMarkers = [];  // 現在 map に表示されているマーカー（重複防止用）
+      const visibleMarkers = [];  // ← markerオブジェクトを入れる配列にする
       const searchInput = document.getElementById("searchInput");
       const searchButton = document.getElementById("searchButton");
       const searchResults = document.getElementById("searchResults");
@@ -200,9 +200,9 @@
 
         // 一致したマーカーだけ map に追加（すでに表示済みはスキップ）
         matches.forEach(m => {
-            if (!visibleMarkers.includes(m)) {
+          if (!visibleMarkers.includes(m.marker)) {
               m.marker.setMap(map);
-              visibleMarkers.push(m); // 表示中リストに追加
+              visibleMarkers.push(m.marker); // ← markerそのものを記録
             }
           });
 
