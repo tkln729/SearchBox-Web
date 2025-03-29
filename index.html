@@ -242,6 +242,7 @@
               });
 
 
+              /*
               const infoContent = `
                 <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
                   <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
@@ -249,6 +250,21 @@
                   <div>${place.number || ''}</div>
                 </div>
               `;
+              */
+
+              const bgColor = place.note ? "#ffe4e1" : "#ffffff"; // noteがあるとピンク、ないと白
+
+              const infoContent = `
+                <div style="background:${bgColor}; padding:8px; border-radius:6px; font-size:13px;">
+                  <div style="font-weight:bold; margin-bottom:4px;">${place.name}</div>
+                  <div>${place.area || ''}</div>
+                  <div>${place.number || ''}</div>
+                  ${place.note ? `<div style="margin-top:4px; color:red;">※ ${place.note}</div>` : ''}
+                </div>
+              `;
+
+
+              
 
               markers.push({
                 marker,
