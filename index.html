@@ -208,7 +208,7 @@
           }
         });
 
-        //sharedInfoWindow = new google.maps.InfoWindow();
+        sharedInfoWindow = new google.maps.InfoWindow();
 
         try {
           const snapshot = await getDocs(collection(db, "mapAllBox"));
@@ -242,7 +242,6 @@
               });
 
 
-              /*
               const infoContent = `
                 <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
                   <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
@@ -250,38 +249,35 @@
                   <div>${place.number || ''}</div>
                 </div>
               `;
-              */
+              
 
-              const bgColor = place.note ? "#ffe4e1" : "#ffffff"; // noteがあるとピンク、ないと白
-
-              const infoContent = `
-                <div style="background:${bgColor}; padding:8px; border-radius:6px; font-size:13px;">
-                  <div style="font-weight:bold; margin-bottom:4px;">${place.name}</div>
-                  <div>${place.area || ''}</div>
-                  <div>${place.number || ''}</div>
-                  ${place.note ? `<div style="margin-top:4px; color:red;">※ ${place.note}</div>` : ''}
-                </div>
-              `;
-
-              const infoWindow = new google.maps.InfoWindow({
-                content: infoContent
+              markers.push({
+                marker,
+                name: place.name,
+                number: place.number || "",
+                infoContent,
               });
-                            
 
               marker.addListener("click", () => {
-                infoWindow.open(map, marker);
-                
-                const areaInfoDiv = document.getElementById("areaInfo");
-                areaInfoDiv.innerHTML = `
-                  <strong>${place.organization}${place.number} ${place.name}</strong>
-                  　エリア: ${place.area || '情報なし'}
-                  　タイプ: ${place.type || '不明'}
-                  　周期: ${place.cycle || '情報なし'}
-                  　担当: ${place.poc || '不明'}
-                  　住所: ${place.address || '不明'}
-                `;
-              });
+                sharedInfoWindow.setContent(infoContent);
+                sharedInfoWindow.open(map, marker);
 
+                 // ↓ 地図下にエリア情報を表示！
+                const areaInfoDiv = document.getElementById("areaInfo");
+                areaInfoDiv.textContent = `エリア: ${place.area || '情報なし'}`;
+
+                areaInfoDiv.innerHTML = `
+                <strong>${place.organization}${place.number} ${place.name}</strong>
+                　エリア: ${place.area || '情報なし'}
+                　タイプ: ${place.type || '不明'}
+                　周期: ${place.cycle || '情報なし'}
+                　担当: ${place.poc || '不明'}
+                　住所: ${place.address || '不明'}
+              `;
+
+
+
+              });
             }
           });
 
