@@ -181,33 +181,24 @@
 
     function loadGoogleMaps() {
       let map;
-      const markers = [];// すべてのマーカー（mapに表示されていなくても全保持）
-      const visibleMarkers = [];  // ← markerオブジェクトを入れる配列にする
+      const markers = [];
       const searchInput = document.getElementById("searchInput");
       const searchButton = document.getElementById("searchButton");
       const searchResults = document.getElementById("searchResults");
 
       function showSearchSuggestions(keyword) {
         const lower = keyword.toLowerCase();
-    
+        //const matches = markers.filter(m => m.name && m.name.toLowerCase().includes(lower));
 
-         
+
         const matches = markers.filter(m => {
         const nameMatch = m.name && m.name.toLowerCase().includes(lower);
         const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
         return nameMatch || numberMatch;
         });
-        /*
 
-        // 一致したマーカーだけ map に追加（すでに表示済みはスキップ）
-        matches.forEach(m => {
-          if (!visibleMarkers.includes(m.marker)) {
-              m.marker.setMap(map);
-              visibleMarkers.push(m.marker); // ← markerそのものを記録
-            }
-          });
 
-          */
+
 
         if (matches.length === 0) {
           searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
@@ -229,11 +220,6 @@
             item.style.backgroundColor = "";
           });
           item.addEventListener("click", () => {
-             // マーカーを map に表示
-            if (!visibleMarkers.includes(m.marker)) {
-              m.marker.setMap(map);
-              visibleMarkers.push(m.marker);
-            }
             map.panTo(m.marker.getPosition());
             map.setZoom(15); // ← ここでズームアップ
             sharedInfoWindow.setContent(m.infoContent);
@@ -291,8 +277,7 @@
                // MarkerWithLabelを使用したマーカー
               const marker = new markerWithLabel.MarkerWithLabel({
                 position: loc,
-                map: null, // ← 最初は表示しない
-                //map: map, これは全部プロットする
+                map: map,
                 title: place.name,
                 icon: {
                   url: place.icon,
@@ -345,8 +330,6 @@
           });
 
 
-          /*
-
           // markers配列にマーカーを追加し終えた後に以下のコードを追加
           const clusterer = new markerClusterer.MarkerClusterer({ 
             map: map, 
@@ -355,7 +338,6 @@
             gridSize: 50,           // クラスタリング範囲のピクセル数
           });
 
-          */
 
 
         } catch (err) {
@@ -363,23 +345,14 @@
         }
       };
 
-      
       searchInput.addEventListener("input", () => {
         const keyword = searchInput.value.trim();
         if (keyword) {
-          //showSearchSuggestions(keyword);// ← 文字を打つたびに実行される
+          showSearchSuggestions(keyword);
         } else {
           searchResults.style.display = "none";
         }
       });
-
-      searchButton.addEventListener("click", () => {
-        const keyword = searchInput.value.trim();
-        if (keyword) {
-          showSearchSuggestions(keyword);
-        }
-      });
-
 
       searchInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
