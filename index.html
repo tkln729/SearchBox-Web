@@ -66,18 +66,6 @@
       display: none;
     }
 
-      #toSelectMapButton {
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 12px;
-      font-size: 0.95rem;
-      cursor: pointer;
-      display: none; /* 最初は非表示 */
-    }
-
-
     #searchWrapper {
       display: flex;
       justify-content: center;  /* ← 中央寄せここ！ */
@@ -126,7 +114,6 @@
     <p id="loginMessage"></p>
   </div>
   <div id="header">
-    <button id="toSelectMapButton" onclick="location.href='selectmap.html'" style="display: none;">検索のみ表示するタイプのMap</button>
     <h2 id="pageTitle">千葉県BOX一覧MAP</h2>
     <button onclick="logout()" id="logoutButton">ログアウト</button>
   </div>
@@ -185,13 +172,11 @@
         document.getElementById("mapSection").style.display = "block";
         document.getElementById("areaInfo").style.display = "block";
         document.getElementById("logoutButton").style.display = "block";
-        document.getElementById("toSelectMapButton").style.display = "block";
         loadGoogleMaps();
         logEvent(analytics, 'map_viewed');
       } else {
         document.getElementById("mapSection").style.display = "none";
         document.getElementById("loginSection").style.display = "block";
-        document.getElementById("toSelectMapButton").style.display = "none";
       }
     });
 
