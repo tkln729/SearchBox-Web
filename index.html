@@ -181,27 +181,30 @@
 
     function loadGoogleMaps() {
       let map;
-      const markers = [];
+      const markers = [];// すべてのマーカー（mapに表示されていなくても全保持）
+      const visibleMarkers = [];  // 現在 map に表示されているマーカー（重複防止用）
       const searchInput = document.getElementById("searchInput");
       const searchButton = document.getElementById("searchButton");
       const searchResults = document.getElementById("searchResults");
 
       function showSearchSuggestions(keyword) {
         const lower = keyword.toLowerCase();
-        //const matches = markers.filter(m => m.name && m.name.toLowerCase().includes(lower));
+    
 
-         // 🔻 ① 全マーカー非表示にする
-        markers.forEach(m => m.marker.setMap(null));
-
-        // 🔍 ② 検索にマッチしたものだけ取り出す
+         
         const matches = markers.filter(m => {
         const nameMatch = m.name && m.name.toLowerCase().includes(lower);
         const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
         return nameMatch || numberMatch;
         });
 
-        // 🔁 ③ 検索にヒットしたものだけ map に戻す
-        matches.forEach(m => m.marker.setMap(map));
+        // 一致したマーカーだけ map に追加（すでに表示済みはスキップ）
+        matches.forEach(m => {
+            if (!visibleMarkers.includes(m)) {
+              m.marker.setMap(map);
+              visibleMarkers.push(m); // 表示中リストに追加
+            }
+          });
 
 
         if (matches.length === 0) {
@@ -281,6 +284,7 @@
                // MarkerWithLabelを使用したマーカー
               const marker = new markerWithLabel.MarkerWithLabel({
                 position: loc,
+                map: null, // ← 最初は表示しない
                 map: map,
                 title: place.name,
                 icon: {
