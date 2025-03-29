@@ -285,7 +285,7 @@
               const marker = new markerWithLabel.MarkerWithLabel({
                 position: loc,
                 map: null, // ← 最初は表示しない
-                map: map,
+                //map: map, これは全部プロットする
                 title: place.name,
                 icon: {
                   url: place.icon,
@@ -338,6 +338,8 @@
           });
 
 
+          /*
+
           // markers配列にマーカーを追加し終えた後に以下のコードを追加
           const clusterer = new markerClusterer.MarkerClusterer({ 
             map: map, 
@@ -346,6 +348,7 @@
             gridSize: 50,           // クラスタリング範囲のピクセル数
           });
 
+          */
 
 
         } catch (err) {
@@ -353,6 +356,7 @@
         }
       };
 
+      
       searchInput.addEventListener("input", () => {
         const keyword = searchInput.value.trim();
         if (keyword) {
