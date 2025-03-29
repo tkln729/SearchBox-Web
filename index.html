@@ -360,11 +360,19 @@
       searchInput.addEventListener("input", () => {
         const keyword = searchInput.value.trim();
         if (keyword) {
-          showSearchSuggestions(keyword);
+          //showSearchSuggestions(keyword);// ← 文字を打つたびに実行される
         } else {
           searchResults.style.display = "none";
         }
       });
+
+      searchButton.addEventListener("click", () => {
+        const keyword = searchInput.value.trim();
+        if (keyword) {
+          showSearchSuggestions(keyword);
+        }
+      });
+
 
       searchInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
