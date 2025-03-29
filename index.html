@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>基地局全体MAP</title>
+  <title>Box全体MAP</title>
   <style>
     #map { height: 80vh; width: 100%; }
     #loginSection, #mapSection { display: none; }
@@ -69,7 +69,7 @@
   </div>
 
   <div id="mapSection">
-    <h2>千葉県N基地局一覧MAP</h2>
+    <h2>千葉県Box一覧MAP</h2>
     <button onclick="logout()">ログアウト</button>
     <div style="margin: 10px 0; position: relative;">
       <input type="text" id="searchInput" placeholder="基地局名で検索"
@@ -235,7 +235,7 @@
                   url: place.icon,
                   scaledSize: new google.maps.Size(48, 48)
                 },
-                labelContent: `<div>${place.number}<br>${place.name}</div>`, // 表示したいラベル名
+                labelContent: `<div>${place.organization}${place.number}<br>${place.name}</div>`, // 表示したいラベル名
                 labelAnchor: new google.maps.Point(0, 0),
                 labelClass: "marker-label", // ラベルのCSSクラス
                 labelStyle: { opacity: 0.85 },
