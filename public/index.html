@@ -40,28 +40,20 @@
       font-weight: bold;
     }
     .marker-label {
-    background-color: #00568b; /* 薄い青（ライトスカイブルー） */
-    color: white;             /* 文字色を白に設定 */
-    border: 1px solid #888;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    white-space: normal; /* ←改行を有効化 */
-    text-align: center;  /* ←中央揃えもおすすめ */
+      background-color: #00568b;
+      color: white;
+      border: 1px solid #888;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      white-space: normal;
+      text-align: center;
     }
-    #areaInfo {
-    display: none;
-    }
-
-
   </style>
   <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js"></script>
-  <!-- 追加のMarkerWithLabelライブラリ読み込み -->
   <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerwithlabel/dist/index.min.js"></script>
-  <!-- MarkerClustererライブラリの追加 -->
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-
 </head>
 <body>
   <div id="loginSection">
@@ -76,19 +68,15 @@
     <h2>千葉県Box一覧MAP</h2>
     <button onclick="logout()">ログアウト</button>
     <div style="margin: 10px 0; position: relative;">
-      <input type="text" id="searchInput" placeholder="BOXを検索"
-             style="padding:6px; width:250px; font-size:1rem;">
+      <input type="text" id="searchInput" placeholder="BOXを検索" style="padding:6px; width:250px; font-size:1rem;">
       <button id="searchButton" style="padding:6px 12px; font-size:1rem;">検索</button>
-      <div id="searchResults"
-           style="background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto;
-                  position:absolute; top:40px; z-index:1000; width:250px; display:none;"></div>
+      <div id="searchResults" style="background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto; position:absolute; top:40px; z-index:1000; width:250px; display:none;"></div>
     </div>
     <div id="map"></div>
   </div>
   <div id="areaInfo" style="padding:10px; font-size:16px; background:#f0f0f0; border-top:1px solid #ccc;">
     地図上のピンか吹き出しをタップするとその情報がここに表示されます。
   </div>
-  
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
@@ -125,10 +113,9 @@
     window.logout = () => signOut(auth);
 
     onAuthStateChanged(auth, (user) => {
-      if (user) {//ログイン成功したらビューを表示したり非表示にしたりする。none非表示block表示
+      if (user) {
         document.getElementById("loginSection").style.display = "none";
         document.getElementById("mapSection").style.display = "block";
-        document.getElementById("areaInfo").style.display = "block";
         loadGoogleMaps();
         logEvent(analytics, 'map_viewed');
       } else {
@@ -141,22 +128,15 @@
       let map;
       const markers = [];
       const searchInput = document.getElementById("searchInput");
-      const searchButton = document.getElementById("searchButton");
       const searchResults = document.getElementById("searchResults");
 
       function showSearchSuggestions(keyword) {
         const lower = keyword.toLowerCase();
-        //const matches = markers.filter(m => m.name && m.name.toLowerCase().includes(lower));
-
-
         const matches = markers.filter(m => {
-        const nameMatch = m.name && m.name.toLowerCase().includes(lower);
-        const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
-        return nameMatch || numberMatch;
+          const nameMatch = m.name && m.name.toLowerCase().includes(lower);
+          const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
+          return nameMatch || numberMatch;
         });
-
-
-
 
         if (matches.length === 0) {
           searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
@@ -171,15 +151,11 @@
           item.style.padding = "6px";
           item.style.cursor = "pointer";
           item.style.borderBottom = "1px solid #eee";
-          item.addEventListener("mouseover", () => {
-            item.style.backgroundColor = "#f0f0f0";
-          });
-          item.addEventListener("mouseout", () => {
-            item.style.backgroundColor = "";
-          });
+          item.addEventListener("mouseover", () => item.style.backgroundColor = "#f0f0f0");
+          item.addEventListener("mouseout", () => item.style.backgroundColor = "");
           item.addEventListener("click", () => {
             map.panTo(m.marker.getPosition());
-            map.setZoom(15); // ← ここでズームアップ
+            map.setZoom(15);
             sharedInfoWindow.setContent(m.infoContent);
             sharedInfoWindow.open(map, m.marker);
             searchResults.style.display = "none";
@@ -188,14 +164,12 @@
           });
           searchResults.appendChild(item);
         });
-
         searchResults.style.display = "block";
       }
 
       const script = document.createElement("script");
       script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
       script.async = true;
-      
 
       let sharedInfoWindow;
 
@@ -232,7 +206,6 @@
 
               const loc = { lat, lng };
 
-               // MarkerWithLabelを使用したマーカー
               const marker = new markerWithLabel.MarkerWithLabel({
                 position: loc,
                 map: map,
@@ -241,12 +214,11 @@
                   url: place.icon,
                   scaledSize: new google.maps.Size(24, 24)
                 },
-                labelContent: `<div>${place.organization} ${place.number}<br>${place.name}</div>`, // 表示したいラベル名
+                labelContent: `<div>${place.organization} ${place.number}<br>${place.name}</div>`,
                 labelAnchor: new google.maps.Point(0, 0),
-                labelClass: "marker-label", // ラベルのCSSクラス
+                labelClass: "marker-label",
                 labelStyle: { opacity: 0.85 },
               });
-
 
               const infoContent = `
                 <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
@@ -255,7 +227,6 @@
                   <div>${place.number || ''}</div>
                 </div>
               `;
-              
 
               markers.push({
                 marker,
@@ -267,36 +238,24 @@
               marker.addListener("click", () => {
                 sharedInfoWindow.setContent(infoContent);
                 sharedInfoWindow.open(map, marker);
-
-                 // ↓ 地図下にエリア情報を表示！
-                const areaInfoDiv = document.getElementById("areaInfo");
-                areaInfoDiv.textContent = `エリア: ${place.area || '情報なし'}`;
-
-                areaInfoDiv.innerHTML = `
-                <strong>${place.organization}${place.number} ${place.name}</strong>
-                　エリア: ${place.area || '情報なし'}
-                　タイプ: ${place.type || '不明'}
-                　周期: ${place.cycle || '情報なし'}
-                　担当: ${place.poc || '不明'}
-                　住所: ${place.address || '不明'}
-              `;
-
-
-
+                document.getElementById("areaInfo").innerHTML = `
+                  <strong>${place.organization}${place.number} ${place.name}</strong>
+                  　エリア: ${place.area || '情報なし'}
+                  　タイプ: ${place.type || '不明'}
+                  　周期: ${place.cycle || '情報なし'}
+                  　担当: ${place.poc || '不明'}
+                  　住所: ${place.address || '不明'}
+                `;
               });
             }
           });
 
-
-          // markers配列にマーカーを追加し終えた後に以下のコードを追加
-          const clusterer = new markerClusterer.MarkerClusterer({ 
-            map: map, 
+          new markerClusterer.MarkerClusterer({
+            map: map,
             markers: markers.map(m => m.marker),
-            minimumClusterSize: 3,  // 3個以上でクラスタ表示
-            gridSize: 50,           // クラスタリング範囲のピクセル数
+            minimumClusterSize: 3,
+            gridSize: 50,
           });
-
-
 
         } catch (err) {
           console.error("Firestore 読み込み失敗：", err);
@@ -321,14 +280,14 @@
           }
         }
       });
+
       searchInput.addEventListener("focus", () => {
         searchInput.value = "";
-        searchResults.style.display = "none"; // 検索候補も非表示にする（任意）
+        searchResults.style.display = "none";
       });
 
       document.head.appendChild(script);
     }
   </script>
-</style>
 </body>
 </html>
