@@ -72,7 +72,7 @@
     <h2>千葉県Box一覧MAP</h2>
     <button onclick="logout()">ログアウト</button>
     <div style="margin: 10px 0; position: relative;">
-      <input type="text" id="searchInput" placeholder="基地局名で検索"
+      <input type="text" id="searchInput" placeholder="BOXを検索"
              style="padding:6px; width:250px; font-size:1rem;">
       <button id="searchButton" style="padding:6px 12px; font-size:1rem;">検索</button>
       <div id="searchResults"
@@ -82,7 +82,7 @@
     <div id="map"></div>
   </div>
   <div id="areaInfo" style="padding:10px; font-size:16px; background:#f0f0f0; border-top:1px solid #ccc;">
-    ここにエリア情報が表示されます
+    地図上のピンか吹き出しをタップするとその情報がここに表示されます。
   </div>
   
 
@@ -235,7 +235,7 @@
                   url: place.icon,
                   scaledSize: new google.maps.Size(48, 48)
                 },
-                labelContent: `<div>${place.organization}${place.number}<br>${place.name}</div>`, // 表示したいラベル名
+                labelContent: `<div>${place.organization} ${place.number}<br>${place.name}</div>`, // 表示したいラベル名
                 labelAnchor: new google.maps.Point(0, 0),
                 labelClass: "marker-label", // ラベルのCSSクラス
                 labelStyle: { opacity: 0.85 },
