@@ -264,6 +264,17 @@
           }
         });
 
+
+	const areaInfoDiv = document.getElementById("areaInfo");
+        //地図を動かすと下記のinfoAreaが下記の文章になる
+        map.addListener("dragstart", () => {
+          areaInfoDiv.innerHTML = "地図上のピンをタップするとその情報がここに表示されます。";
+        });
+
+        map.addListener("zoom_changed", () => {
+          areaInfoDiv.innerHTML = "地図上のピンをタップするとその情報がここに表示されます。";
+        });
+
         sharedInfoWindow = new google.maps.InfoWindow();
 
         try {

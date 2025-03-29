@@ -39,6 +39,42 @@
       color: red;
       font-weight: bold;
     }
+    #header {
+      position: relative;
+      height: 60px;
+      background-color: #fff;
+    }
+    #pageTitle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    #logoutButton {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      padding: 2px 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: none;
+    }
+    #searchWrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    #searchButton {
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
     .marker-label {
       background-color: #00568b;
       color: white;
@@ -50,7 +86,11 @@
       white-space: normal;
       text-align: center;
     }
+    #areaInfo {
+      display: none;
+    }
   </style>
+
   <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerwithlabel/dist/index.min.js"></script>
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
@@ -63,14 +103,17 @@
     <button onclick="login()">ログイン</button>
     <p id="loginMessage"></p>
   </div>
-
+  <div id="header">
+    <h2 id="pageTitle">千葉県BOX一覧MAP</h2>
+    <button onclick="logout()" id="logoutButton">ログアウト</button>
+  </div>
   <div id="mapSection">
-    <h2>千葉県Box一覧MAP</h2>
-    <button onclick="logout()">ログアウト</button>
-    <div style="margin: 10px 0; position: relative;">
+    <div id="searchWrapper" style="margin: 10px 0; position: relative;">
       <input type="text" id="searchInput" placeholder="BOXを検索" style="padding:6px; width:250px; font-size:1rem;">
       <button id="searchButton" style="padding:6px 12px; font-size:1rem;">検索</button>
-      <div id="searchResults" style="background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto; position:absolute; top:40px; z-index:1000; width:250px; display:none;"></div>
+      <div id="searchResults"
+           style="background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto;
+                  position:absolute; top:40px; z-index:1000; width:250px; display:none;"></div>
     </div>
     <div id="map"></div>
   </div>
@@ -94,7 +137,6 @@
       measurementId: "G-KR1EMB8TLN"
     };
 
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
     const db = getFirestore(app);
@@ -116,11 +158,16 @@
       if (user) {
         document.getElementById("loginSection").style.display = "none";
         document.getElementById("mapSection").style.display = "block";
+        document.getElementById("areaInfo").style.display = "block";
+        document.getElementById("logoutButton").style.display = "block";
+        document.getElementById("header").style.display = "block";
         loadGoogleMaps();
         logEvent(analytics, 'map_viewed');
       } else {
         document.getElementById("mapSection").style.display = "none";
         document.getElementById("loginSection").style.display = "block";
+        document.getElementById("header").style.display = "none";
+        document.getElementById("areaInfo").style.display = "none";
       }
     });
 
@@ -128,6 +175,7 @@
       let map;
       const markers = [];
       const searchInput = document.getElementById("searchInput");
+      const searchButton = document.getElementById("searchButton");
       const searchResults = document.getElementById("searchResults");
 
       function showSearchSuggestions(keyword) {
@@ -164,6 +212,7 @@
           });
           searchResults.appendChild(item);
         });
+
         searchResults.style.display = "block";
       }
 
@@ -238,7 +287,8 @@
               marker.addListener("click", () => {
                 sharedInfoWindow.setContent(infoContent);
                 sharedInfoWindow.open(map, marker);
-                document.getElementById("areaInfo").innerHTML = `
+                const areaInfoDiv = document.getElementById("areaInfo");
+                areaInfoDiv.innerHTML = `
                   <strong>${place.organization}${place.number} ${place.name}</strong>
                   　エリア: ${place.area || '情報なし'}
                   　タイプ: ${place.type || '不明'}
@@ -250,7 +300,7 @@
             }
           });
 
-          new markerClusterer.MarkerClusterer({
+          const clusterer = new markerClusterer.MarkerClusterer({
             map: map,
             markers: markers.map(m => m.marker),
             minimumClusterSize: 3,
