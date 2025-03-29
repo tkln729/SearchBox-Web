@@ -41,30 +41,33 @@
     }
 
     #header {
-      display: flex;
-      justify-content: space-between; /* 左右に配置（タイトル左寄せ・ボタン右寄せ） */
-      align-items: center;
-      padding: 10px 20px;
+      position: relative;
+      height: 60px;
+      
+      background-color: #fff;
     }
 
     #pageTitle {
-      margin: 0 auto;       /* 中央揃え用 */
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0;
       font-size: 1.5rem;
-      text-align: center;
-      flex: 1;              /* タイトルが中央に来やすくなる */
     }
 
-
-      #logoutButton {
-      background-color: #1976d2;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
+    #logoutButton {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      padding: 2px 4px;
       font-size: 1rem;
       cursor: pointer;
       display: none;
     }
+
+     
 
     #searchWrapper {
       display: flex;
@@ -171,14 +174,16 @@
         document.getElementById("loginSection").style.display = "none";
         document.getElementById("mapSection").style.display = "block";
         document.getElementById("areaInfo").style.display = "block";
+        document.getElementById("logoutButton").style.display = "block";
         document.getElementById("header").style.display = "block";
         loadGoogleMaps();
         logEvent(analytics, 'map_viewed');
       } else {
         document.getElementById("mapSection").style.display = "none";
         document.getElementById("loginSection").style.display = "block";
-        document.getElementById("areaInfo").style.display = "none";
         document.getElementById("header").style.display = "none";
+        document.getElementById("areaInfo").style.display = "none";
+
       }
     });
 
