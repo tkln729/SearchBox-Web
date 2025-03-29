@@ -263,8 +263,10 @@
                 </div>
               `;
 
-
-              
+              const infoWindow = new google.maps.InfoWindow({
+                content: infoContent
+              });
+                            
 
               markers.push({
                 marker,
