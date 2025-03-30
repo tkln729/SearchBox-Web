@@ -55,6 +55,19 @@
       cursor: pointer;
       display: none;
     }
+    #navButton {
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      padding: 4px 8px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
     #searchWrapper {
       display: flex;
       flex-direction: column;
@@ -157,6 +170,7 @@
   </div>
   <div id="header">
     <h2 id="pageTitle">検索すると📍マーカーが表示されていきます。</h2>
+    <button id="navButton" onclick="location.href='allbox.html'">📄 別ページへ</button>
     <button onclick="logout()" id="logoutButton">ログアウト</button>
   </div>
   <div id="mapSection">
