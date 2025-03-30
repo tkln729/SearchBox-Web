@@ -153,12 +153,12 @@
     <p id="loginMessage"></p>
   </div>
   <div id="header">
-    <h2 id="pageTitle">検索するとマーカーが表示されていきます。</h2>
+    <h2 id="pageTitle">検索すると📍マーカーが表示されていきます。</h2>
     <button onclick="logout()" id="logoutButton">ログアウト</button>
   </div>
   <div id="mapSection">
     <div id="searchWrapper">
-      <div id="searchControls">📍
+      <div id="searchControls">
         <input type="text" id="searchInput" placeholder="BOXを検索">
         <button id="searchButton">検索</button>
         <button id="clearButton" onclick="clearMarkers()">📍全クリア</button>
@@ -221,7 +221,7 @@
           scaledSize: new google.maps.Size(24, 24)
         },
         labelContent: `<div>${m.organization} ${m.number}<br>${m.name}</div>`,
-        labelAnchor: new google.maps.Point(12, -36), //マーカーラベルの位置変更
+        labelAnchor: new google.maps.Point(0, -48), //マーカーラベルの位置変更
         labelClass: "marker-label",
         labelStyle: { opacity: 0.85 },
         labelInBackground: false,
