@@ -247,54 +247,79 @@
 
       function showSearchSuggestions(keyword) {
         const lower = keyword.toLowerCase();
-        //const matches = markers.filter(m => m.name && m.name.toLowerCase().includes(lower));
-
-
-        const matches = markers.filter(m => {
-        const nameMatch = m.name && m.name.toLowerCase().includes(lower);
-        const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
-        return nameMatch || numberMatch;
+        const matches = markersData.filter(m => {
+          const nameMatch = m.name && m.name.toLowerCase().includes(lower);
+          const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
+          return nameMatch || numberMatch;
         });
 
 
+        // マーカーをすべて削除しておく
+        markers.forEach(m => m.marker.setMap(null));
+          markers.length = 0; // マーカーリストを空に
 
+          if (matches.length === 0) {
+            searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
+            searchResults.style.display = "block";
+            return;
+          }
+        
+  searchResults.innerHTML = "";
+  matches.forEach((m) => {
+    const marker = new markerWithLabel.MarkerWithLabel({
+      position: m.loc,
+      map: map,
+      title: m.name,
+      icon: {
+        url: m.icon,
+        scaledSize: new google.maps.Size(24, 24)
+      },
+      labelContent: `<div>${m.organization} ${m.number}<br>${m.name}</div>`,
+      labelAnchor: new google.maps.Point(0, 0),
+      labelClass: "marker-label",
+      labelStyle: { opacity: 0.85 },
+    });
 
-        if (matches.length === 0) {
-          searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
-          searchResults.style.display = "block";
-          return;
-        }
+    marker.addListener("click", () => {
+      sharedInfoWindow.setContent(m.infoContent);
+      sharedInfoWindow.open(map, marker);
 
-        searchResults.innerHTML = "";
-        matches.forEach((m) => {
-          const item = document.createElement("div");
-          item.textContent = m.name;
-          item.style.padding = "6px";
-          item.style.cursor = "pointer";
-          item.style.borderBottom = "1px solid #eee";
-          item.addEventListener("mouseover", () => {
-            item.style.backgroundColor = "#f0f0f0";
-          });
-          item.addEventListener("mouseout", () => {
-            item.style.backgroundColor = "";
-          });
-          item.addEventListener("click", () => {
-            map.panTo(m.marker.getPosition());
-            map.setZoom(15); // ← ここでズームアップ
-            sharedInfoWindow.setContent(m.infoContent);
-            sharedInfoWindow.open(map, m.marker);
-            searchResults.style.display = "none";
-            searchInput.value = m.name;
-            searchInput.blur(); // ← フォーカスを外す
-            showCrosshair(); // ← 画面中央に十字線追加
-            logEvent(analytics, 'search_used');
-          });
-          searchResults.appendChild(item);
-        });
+      const areaInfoDiv = document.getElementById("areaInfo");
+      areaInfoDiv.innerHTML = `
+        <strong>${m.organization}${m.number} ${m.name}</strong>
+        　エリア: ${m.area || '情報なし'}
+        　タイプ: ${m.type || '不明'}
+        　周期: ${m.cycle || '情報なし'}
+        　担当: ${m.poc || '不明'}
+        　住所: ${m.address || '不明'}
+      `;
+    });
 
-        searchResults.style.display = "block";
-      }
+    // 表示中のマーカーリストに追加
+    markers.push({ marker });
 
+    const item = document.createElement("div");
+    item.textContent = m.name;
+    item.style.padding = "6px";
+    item.style.cursor = "pointer";
+    item.style.borderBottom = "1px solid #eee";
+    item.addEventListener("click", () => {
+      map.panTo(m.loc);
+      map.setZoom(15);
+      sharedInfoWindow.setContent(m.infoContent);
+      sharedInfoWindow.open(map, marker);
+      searchResults.style.display = "none";
+      searchInput.value = m.name;
+      searchInput.blur();
+      showCrosshair();
+      logEvent(analytics, 'search_used');
+    });
+
+    searchResults.appendChild(item);
+  });
+
+  searchResults.style.display = "block";
+}
       const script = document.createElement("script");
       script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
       script.async = true;
@@ -346,36 +371,47 @@
 
               const loc = { lat, lng };
 
-               // MarkerWithLabelを使用したマーカー
-              const marker = new markerWithLabel.MarkerWithLabel({
-                position: loc,
-                map: map,
-                title: place.name,
-                icon: {
-                  url: place.icon,
-                  scaledSize: new google.maps.Size(24, 24)
-                },
-                labelContent: `<div>${place.organization} ${place.number}<br>${place.name}</div>`, // 表示したいラベル名
-                labelAnchor: new google.maps.Point(0, 0),
-                labelClass: "marker-label", // ラベルのCSSクラス
-                labelStyle: { opacity: 0.85 },
-              });
+               // snapshot.forEach でマーカーをすぐ作っていた ↓ これをやめる
+              // この部分では「全データを markersData に保持するだけ」に変更
 
+              const markersData = []; // ← マーカーではなく、データのみ保持
 
-              const infoContent = `
-                <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
-                  <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
-                  <div>${place.area || ''}</div>
-                  <div>${place.number || ''}</div>
-                </div>
-              `;
-              
+              snapshot.forEach((doc) => {
+                const data = doc.data();
 
-              markers.push({
-                marker,
-                name: place.name,
-                number: place.number || "",
-                infoContent,
+                for (const key in data) {
+                  const place = data[key];
+                  if (!place.position || !place.name) continue;
+
+                  const [latStr, lngStr] = place.position.split(',').map(s => s.trim());
+                  const lat = parseFloat(latStr);
+                  const lng = parseFloat(lngStr);
+                  if (isNaN(lat) || isNaN(lng)) continue;
+
+                  const loc = { lat, lng };
+
+                  const infoContent = `
+                    <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
+                      <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
+                      <div>${place.area || ''}</div>
+                      <div>${place.number || ''}</div>
+                    </div>
+                  `;
+
+                  markersData.push({
+                    loc,
+                    name: place.name,
+                    number: place.number || "",
+                    icon: place.icon,
+                    infoContent,
+                    organization: place.organization || "",
+                    area: place.area || "",
+                    type: place.type || "",
+                    cycle: place.cycle || "",
+                    poc: place.poc || "",
+                    address: place.address || "",
+                  });
+                }
               });
 
               marker.addListener("click", () => {
@@ -399,15 +435,6 @@
 
               });
             }
-          });
-
-
-          // markers配列にマーカーを追加し終えた後に以下のコードを追加
-          const clusterer = new markerClusterer.MarkerClusterer({ 
-            map: map, 
-            markers: markers.map(m => m.marker),
-            minimumClusterSize: 3,  // 3個以上でクラスタ表示
-            gridSize: 50,           // クラスタリング範囲のピクセル数
           });
 
 
