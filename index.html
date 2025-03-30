@@ -60,8 +60,16 @@
       align-items: flex-start;
       gap: 8px;
       position: relative;
+      margin-bottom: 8px;
     }
-    #searchButton {
+    #searchInput {
+      font-size: 1.5rem;
+      padding: 10px;
+      width: 300px;
+    }
+    #searchButton, #clearButton {
+      font-size: 1.5rem;
+      padding: 10px 16px;
       background-color: #1976d2;
       color: white;
       border: none;
@@ -70,13 +78,13 @@
     }
     #searchResults {
       position: absolute;
-      top: 38px;
+      top: 100%;
       left: 0;
       background: #fff;
       border: 1px solid #ccc;
       max-height: 200px;
       overflow-y: auto;
-      width: 250px;
+      width: 300px;
       z-index: 1000;
       display: none;
     }
@@ -141,11 +149,11 @@
     <h2 id="pageTitle">千葉県BOX一覧MAP</h2>
     <button onclick="logout()" id="logoutButton">ログアウト</button>
   </div>
-  <button onclick="clearMarkers()">マーカークリア</button>
   <div id="mapSection">
     <div id="searchWrapper">
       <input type="text" id="searchInput" placeholder="BOXを検索">
       <button id="searchButton">検索</button>
+      <button id="clearButton" onclick="clearMarkers()">マーカークリア</button>
       <div id="searchResults"></div>
     </div>
     <div id="map"></div>
