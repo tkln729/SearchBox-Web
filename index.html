@@ -226,6 +226,7 @@
     function loadGoogleMaps() {
       let map;
       const markers = [];
+      const markersData = [];
       const searchInput = document.getElementById("searchInput");
       const searchButton = document.getElementById("searchButton");
       const searchResults = document.getElementById("searchResults");
@@ -278,6 +279,7 @@
       labelAnchor: new google.maps.Point(0, 0),
       labelClass: "marker-label",
       labelStyle: { opacity: 0.85 },
+      labelInBackground: false,
     });
 
     marker.addListener("click", () => {
@@ -356,93 +358,56 @@
         sharedInfoWindow = new google.maps.InfoWindow();
 
         try {
-          const snapshot = await getDocs(collection(db, "mapAllBox"));
-          snapshot.forEach((doc) => {
-            const data = doc.data();
+  const snapshot = await getDocs(collection(db, "mapAllBox"));
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    for (const key in data) {
+      const place = data[key];
+      if (!place.position || !place.name) continue;
 
-            for (const key in data) {
-              const place = data[key];
-              if (!place.position || !place.name) continue;
+      const [latStr, lngStr] = place.position.split(',').map(s => s.trim());
+      const lat = parseFloat(latStr);
+      const lng = parseFloat(lngStr);
+      if (isNaN(lat) || isNaN(lng)) continue;
 
-              const [latStr, lngStr] = place.position.split(',').map(s => s.trim());
-              const lat = parseFloat(latStr);
-              const lng = parseFloat(lngStr);
-              if (isNaN(lat) || isNaN(lng)) continue;
+      const loc = { lat, lng };
 
-              const loc = { lat, lng };
+      const infoContent = `
+        <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
+          <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
+          <div>${place.area || ''}</div>
+          <div>${place.number || ''}</div>
+        </div>
+      `;
 
-               // snapshot.forEach でマーカーをすぐ作っていた ↓ これをやめる
-              // この部分では「全データを markersData に保持するだけ」に変更
+      markersData.push({
+        loc,
+        name: place.name,
+        number: place.number || "",
+        icon: place.icon,
+        infoContent,
+        organization: place.organization || "",
+        area: place.area || "",
+        type: place.type || "",
+        cycle: place.cycle || "",
+        poc: place.poc || "",
+        address: place.address || "",
+      });
+    }
+  });
+} catch (err) {
+  console.error("Firestore 読み込み失敗：", err);
+}
 
-              const markersData = []; // ← マーカーではなく、データのみ保持
-
-              snapshot.forEach((doc) => {
-                const data = doc.data();
-
-                for (const key in data) {
-                  const place = data[key];
-                  if (!place.position || !place.name) continue;
-
-                  const [latStr, lngStr] = place.position.split(',').map(s => s.trim());
-                  const lat = parseFloat(latStr);
-                  const lng = parseFloat(lngStr);
-                  if (isNaN(lat) || isNaN(lng)) continue;
-
-                  const loc = { lat, lng };
-
-                  const infoContent = `
-                    <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
-                      <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
-                      <div>${place.area || ''}</div>
-                      <div>${place.number || ''}</div>
-                    </div>
-                  `;
-
-                  markersData.push({
-                    loc,
-                    name: place.name,
-                    number: place.number || "",
-                    icon: place.icon,
-                    infoContent,
-                    organization: place.organization || "",
-                    area: place.area || "",
-                    type: place.type || "",
-                    cycle: place.cycle || "",
-                    poc: place.poc || "",
-                    address: place.address || "",
-                  });
-                }
-              });
-
-              marker.addListener("click", () => {
-                sharedInfoWindow.setContent(infoContent);
-                sharedInfoWindow.open(map, marker);
-
-                 // ↓ 地図下にエリア情報を表示！
-                const areaInfoDiv = document.getElementById("areaInfo");
-                areaInfoDiv.textContent = `エリア: ${place.area || '情報なし'}`;
-
-                areaInfoDiv.innerHTML = `
-                <strong>${place.organization}${place.number} ${place.name}</strong>
-                　エリア: ${place.area || '情報なし'}
-                　タイプ: ${place.type || '不明'}
-                　周期: ${place.cycle || '情報なし'}
-                　担当: ${place.poc || '不明'}
-                　住所: ${place.address || '不明'}
-              `;
-
-
-
-              });
-            }
-          });
-
-
-
-        } catch (err) {
-          console.error("Firestore 読み込み失敗：", err);
-        }
       };
+
+      searchButton.addEventListener("click", () => {
+  const keyword = searchInput.value.trim();
+  if (keyword) {
+    showSearchSuggestions(keyword);
+  }
+});
+
 
       searchInput.addEventListener("input", () => {
         const keyword = searchInput.value.trim();
