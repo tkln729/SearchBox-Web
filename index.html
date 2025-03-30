@@ -153,7 +153,7 @@
     <p id="loginMessage"></p>
   </div>
   <div id="header">
-    <h2 id="pageTitle">千葉県BOX一覧MAP</h2>
+    <h2 id="pageTitle">検索するとマーカーが表示されていきます。</h2>
     <button onclick="logout()" id="logoutButton">ログアウト</button>
   </div>
   <div id="mapSection">
@@ -258,7 +258,7 @@
         searchResults.style.display = "block";
         return;
       }
-
+      //検索結果の候補一覧表示し、クリックした候補をマーカー追加する。
       matches.forEach((m) => {
         const item = document.createElement("div");
         item.textContent = m.name;
@@ -268,12 +268,12 @@
         item.addEventListener("click", () => {
           addMarker(m);
           map.panTo(m.loc);
-          map.setZoom(15);
+          map.setZoom(12); //←ここでズームアップ
           sharedInfoWindow.setContent(m.infoContent);
           sharedInfoWindow.open(map, displayedMarkers.find(dm => dm.name === m.name && dm.number === m.number).marker);
           searchResults.style.display = "none";
           document.getElementById("searchInput").value = m.name;
-          document.getElementById("searchInput").blur();
+          document.getElementById("searchInput").blur(); //←フォーカスを外す
           logEvent(analytics, 'search_used');
         });
         searchResults.appendChild(item);
@@ -285,8 +285,8 @@
       displayedMarkers.forEach(m => m.marker.setMap(null));
       displayedMarkers.length = 0;
     };
-
-    function showCrosshair() {
+    //赤い十字線を表示する機能
+    function showCrosshair() {  
       const crosshair = document.getElementById("centerCrosshair");
       crosshair.style.display = "block";
       const remove = () => {
@@ -295,22 +295,32 @@
       map.addListener("dragstart", remove);
       map.addListener("zoom_changed", remove);
     }
-
-    function loadGoogleMaps() {
+    //FireStoreからデータを読み込んで検索用データを準備する動作。全情報がMarkerDataに保存されている。
+    function loadGoogleMaps() { //GoogleAPIを読み込んで初期化
       const script = document.createElement("script");
       script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
       script.async = true;
       document.head.appendChild(script);
 
       window.initMap = async () => {
-        map = new google.maps.Map(document.getElementById("map"), {
+        map = new google.maps.Map(document.getElementById("map"), {  //地図を千葉県あたりに初期表示（ズーム10）でセット。情報ウィンドウ（吹き出し）も一つだけ用意。
           center: { lat: 35.43, lng: 139.92 },
           zoom: 10,
         });
+
+        
+        const areaInfoDiv = document.getElementById("areaInfo"); //地図を動かすと下記のinfoAreaが下記の文章になる
+        map.addListener("dragstart", () => {
+          areaInfoDiv.innerHTML = "地図上のピンをタップすると情報がここに表示されます。";
+        });
+        map.addListener("zoom_changed", () => {
+          areaInfoDiv.innerHTML = "地図上のピンをタップすると情報がここに表示されます。";
+        });
+
         sharedInfoWindow = new google.maps.InfoWindow();
         try {
-          const snapshot = await getDocs(collection(db, "mapAllBox"));
-          snapshot.forEach((doc) => {
+          const snapshot = await getDocs(collection(db, "mapAllBox"));  //Firestoreからデータ取得
+          snapshot.forEach((doc) => {  //データを1件ずつ整理して markersData に保存. 緯度経度名前番号などをmarkerData配列に保存
             const data = doc.data();
             for (const key in data) {
               const place = data[key];
