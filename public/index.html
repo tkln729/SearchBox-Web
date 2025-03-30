@@ -39,11 +39,13 @@
       color: red;
       font-weight: bold;
     }
+
     #header {
       position: relative;
       height: 60px;
       background-color: #fff;
     }
+
     #pageTitle {
       position: absolute;
       top: 50%;
@@ -52,6 +54,7 @@
       margin: 0;
       font-size: 1.5rem;
     }
+
     #logoutButton {
       position: absolute;
       top: 50%;
@@ -62,12 +65,14 @@
       cursor: pointer;
       display: none;
     }
+
     #searchWrapper {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 8px;
     }
+
     #searchButton {
       background-color: #1976d2;
       color: white;
@@ -75,6 +80,7 @@
       border-radius: 4px;
       cursor: pointer;
     }
+
     .marker-label {
       background-color: #00568b;
       color: white;
@@ -86,6 +92,7 @@
       white-space: normal;
       text-align: center;
     }
+
     #areaInfo {
       display: none;
     }
@@ -103,10 +110,12 @@
     <button onclick="login()">ログイン</button>
     <p id="loginMessage"></p>
   </div>
+
   <div id="header">
     <h2 id="pageTitle">千葉県BOX一覧MAP</h2>
     <button onclick="logout()" id="logoutButton">ログアウト</button>
   </div>
+
   <div id="mapSection">
     <div id="searchWrapper" style="margin: 10px 0; position: relative;">
       <input type="text" id="searchInput" placeholder="BOXを検索" style="padding:6px; width:250px; font-size:1rem;">
@@ -117,8 +126,9 @@
     </div>
     <div id="map"></div>
   </div>
+
   <div id="areaInfo" style="padding:10px; font-size:16px; background:#f0f0f0; border-top:1px solid #ccc;">
-    地図上のピンか吹き出しをタップするとその情報がここに表示されます。
+    地図上のピンか吹き出しをタップすると情報が表示されます。
   </div>
 
   <script type="module">
@@ -175,7 +185,6 @@
       let map;
       const markers = [];
       const searchInput = document.getElementById("searchInput");
-      const searchButton = document.getElementById("searchButton");
       const searchResults = document.getElementById("searchResults");
 
       function showSearchSuggestions(keyword) {
@@ -237,20 +246,24 @@
           }
         });
 
+        const areaInfoDiv = document.getElementById("areaInfo");
+        map.addListener("dragstart", () => {
+          areaInfoDiv.innerHTML = "地図上のピンをタップすると情報がここに表示されます。";
+        });
+        map.addListener("zoom_changed", () => {
+          areaInfoDiv.innerHTML = "地図上のピンをタップすると情報がここに表示されます。";
+        });
+
         sharedInfoWindow = new google.maps.InfoWindow();
 
         try {
           const snapshot = await getDocs(collection(db, "mapAllBox"));
           snapshot.forEach((doc) => {
             const data = doc.data();
-
             for (const key in data) {
               const place = data[key];
               if (!place.position || !place.name) continue;
-
-              const [latStr, lngStr] = place.position.split(',').map(s => s.trim());
-              const lat = parseFloat(latStr);
-              const lng = parseFloat(lngStr);
+              const [lat, lng] = place.position.split(',').map(s => parseFloat(s.trim()));
               if (isNaN(lat) || isNaN(lng)) continue;
 
               const loc = { lat, lng };
@@ -277,17 +290,11 @@
                 </div>
               `;
 
-              markers.push({
-                marker,
-                name: place.name,
-                number: place.number || "",
-                infoContent,
-              });
+              markers.push({ marker, name: place.name, number: place.number || "", infoContent });
 
               marker.addListener("click", () => {
                 sharedInfoWindow.setContent(infoContent);
                 sharedInfoWindow.open(map, marker);
-                const areaInfoDiv = document.getElementById("areaInfo");
                 areaInfoDiv.innerHTML = `
                   <strong>${place.organization}${place.number} ${place.name}</strong>
                   　エリア: ${place.area || '情報なし'}
@@ -306,7 +313,6 @@
             minimumClusterSize: 3,
             gridSize: 50,
           });
-
         } catch (err) {
           console.error("Firestore 読み込み失敗：", err);
         }
@@ -314,11 +320,8 @@
 
       searchInput.addEventListener("input", () => {
         const keyword = searchInput.value.trim();
-        if (keyword) {
-          showSearchSuggestions(keyword);
-        } else {
-          searchResults.style.display = "none";
-        }
+        if (keyword) showSearchSuggestions(keyword);
+        else searchResults.style.display = "none";
       });
 
       searchInput.addEventListener("keydown", function (e) {
