@@ -118,14 +118,14 @@
       background: red;
     }
     #centerCrosshair::before {
-      width: 2px;
+      width: 3px;
       height: 100%;
       left: 50%;
       top: 0;
       transform: translateX(-50%);
     }
     #centerCrosshair::after {
-      height: 2px;
+      height: 3px;
       width: 100%;
       top: 50%;
       left: 0;
@@ -285,6 +285,7 @@
             sharedInfoWindow.open(map, m.marker);
             searchResults.style.display = "none";
             searchInput.value = m.name;
+            searchInput.blur(); // ← フォーカスを外す
             showCrosshair(); // ← 画面中央に十字線追加
             logEvent(analytics, 'search_used');
           });
