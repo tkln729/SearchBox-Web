@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Box全体MAP</title>
+  <style>
+    body {
+  background-color: #f7e1cf;
+}
+    #map { height: 80vh; width: 100%; }
+    #loginSection, #mapSection { display: none; }
+    #loginSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 150px;
+      margin-top: 60px;
+    }
+    #loginSection h2 {
+      margin-bottom: 10px;
+    }
+    #loginSection input {
+      width: 400px;
+      padding: 8px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      display: block;
+      margin-bottom: 16px;
+    }
+    #loginSection button {
+      width: 160px;
+      padding: 10px;
+      font-size: 1rem;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #loginMessage {
+      color: red;
+      font-weight: bold;
+    }
+    #header {
+      position: relative;
+      height: 60px;
+      
+      background-color: #fff;
+    }
+    #pageTitle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    #logoutButton {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      padding: 2px 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: none;
+    }
+      #navButton {
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      padding: 4px 8px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #searchWrapper {
+      display: flex;
+      justify-content: center; 
+      align-items: center;
+      gap: 8px;
+    }
+    #searchButton {
+      background-color: #1976d2;
+      color: white; 
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .marker-label {
+    background-color: #00568b; 
+    color: white;             
+    border: 1px solid #888;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    white-space: normal; 
+    text-align: center;  
+    }
+    #areaInfo {
+    display: none;
+    }
+    #centerCrosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin-left: -10px;
+      margin-top: -10px;
+      z-index: 9999;
+      pointer-events: none;
+      display: none;
+    }
+    #centerCrosshair::before,
+    #centerCrosshair::after {
+      content: "";
+      position: absolute;
+      background: red;
+    }
+    #centerCrosshair::before {
+      width: 4px;
+      height: 100%;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+    }
+    #centerCrosshair::after {
+      height: 4px;
+      width: 100%;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerwithlabel/dist/index.min.js"></script>
+  <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+</head>
+<body>
+  <div id="loginSection">
+    <h2>ログインしてください</h2>
+    <input type="email" id="email" placeholder="メールアドレス">
+    <input type="password" id="password" placeholder="パスワード">
+    <button onclick="login()">ログイン</button>
+    <p id="loginMessage"></p>
+  </div>
+  <div id="header">
+    <h2 id="pageTitle">千葉県BOX一覧MAP</h2>
+	<button id="navButton" onclick="location.href='index.html'">📄 個別検索へ</button>
+    <button onclick="logout()" id="logoutButton">ログアウト</button>
+  </div>
+  <div id="mapSection">
+    <div id="searchWrapper" style="margin: 10px 0; position: relative;">
+      <input type="text" id="searchInput" placeholder="BOXを検索" style="padding:6px; width:250px; font-size:1rem;">
+      <button id="searchButton" style="padding:6px 12px; font-size:1rem;">検索</button>
+      <div id="searchResults"
+           style="background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto;
+                  position:absolute; top:40px; z-index:1000; width:250px; display:none;"></div>
+    </div>
+    <div id="map"></div>
+  </div>
+  <div id="areaInfo" style="padding:10px; font-size:16px; background:#f0f0f0; border-top:1px solid #ccc;">
+    地図上のピンか吹き出しをタップすると情報が表示されます。
+  </div>
+  <div id="centerCrosshair"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+    import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCTN_ErXKRtlQn97ukXYghZWpgq6Nmj-uQ",
+      authDomain: "tellwebproject.firebaseapp.com",
+      projectId: "tellwebproject",
+      storageBucket: "tellwebproject.firebasestorage.app",
+      messagingSenderId: "845001095725",
+      appId: "1:845001095725:web:49f78a1ebe577df5be96a4",
+      measurementId: "G-KR1EMB8TLN"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
+    const analytics = getAnalytics(app);
+    window.login = async function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        document.getElementById("loginMessage").innerText = "ログイン失敗: " + error.message;
+      }
+    };
+    window.logout = () => signOut(auth);
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("mapSection").style.display = "block";
+        document.getElementById("areaInfo").style.display = "block";
+        document.getElementById("logoutButton").style.display = "block";
+        document.getElementById("header").style.display = "block";
+        loadGoogleMaps();
+        logEvent(analytics, 'map_viewed');
+      } else {
+        document.getElementById("mapSection").style.display = "none";
+        document.getElementById("loginSection").style.display = "block";
+        document.getElementById("header").style.display = "none";
+        document.getElementById("areaInfo").style.display = "none";
+      }
+    });
+    function loadGoogleMaps() {
+      let map;
+      const markers = [];
+      const searchInput = document.getElementById("searchInput");
+      const searchButton = document.getElementById("searchButton");
+      const searchResults = document.getElementById("searchResults");
+      function showCrosshair() {
+        const crosshair = document.getElementById("centerCrosshair");
+        crosshair.style.display = "block";
+        const removeOnMove = () => {
+          crosshair.style.display = "none";
+          google.maps.event.removeListener(dragListener);
+          google.maps.event.removeListener(zoomListener);
+        };
+        const dragListener = map.addListener("dragstart", removeOnMove);
+        const zoomListener = map.addListener("zoom_changed", removeOnMove);
+      }
+      function showSearchSuggestions(keyword) {
+        const lower = keyword.toLowerCase();
+        const matches = markers.filter(m => {
+        const nameMatch = m.name && m.name.toLowerCase().includes(lower);
+        const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
+        return nameMatch || numberMatch;
+        });
+        if (matches.length === 0) {
+          searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
+          searchResults.style.display = "block";
+          return;
+        }
+        searchResults.innerHTML = "";
+        matches.forEach((m) => {
+          const item = document.createElement("div");
+          item.textContent = m.name;
+          item.style.padding = "6px";
+          item.style.cursor = "pointer";
+          item.style.borderBottom = "1px solid #eee";
+          item.addEventListener("mouseover", () => {
+            item.style.backgroundColor = "#f0f0f0";
+          });
+          item.addEventListener("mouseout", () => {
+            item.style.backgroundColor = "";
+          });
+          item.addEventListener("click", () => {
+            map.panTo(m.marker.getPosition());
+            map.setZoom(15); 
+            sharedInfoWindow.setContent(m.infoContent);
+            sharedInfoWindow.open(map, m.marker);
+            searchResults.style.display = "none";
+            searchInput.value = m.name;
+            searchInput.blur(); 
+            showCrosshair(); 
+            logEvent(analytics, 'search_used');
+          });
+          searchResults.appendChild(item);
+        });
+        searchResults.style.display = "block";
+      }
+      const script = document.createElement("script");
+      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
+      script.async = true;
+      let sharedInfoWindow;
+      window.initMap = async () => {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 35.43, lng: 139.92 },
+          zoom: 10,
+          restriction: {
+            latLngBounds: {
+              north: 45.6,
+              south: 24.0,
+              west: 122.9,
+              east: 153.9
+            },
+            strictBounds: false
+          }
+        });
+	const areaInfoDiv = document.getElementById("areaInfo");
+        map.addListener("dragstart", () => {
+          areaInfoDiv.innerHTML = "地図上のピンをタップすると情報がここに表示されます。";
+        });
+        map.addListener("zoom_changed", () => {
+          areaInfoDiv.innerHTML = "地図上のピンをタップすると情報がここに表示されます。";
+        });
+        sharedInfoWindow = new google.maps.InfoWindow();
+        try {
+          const snapshot = await getDocs(collection(db, "mapAllBox"));
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            for (const key in data) {
+              const place = data[key];
+              if (!place.position || !place.name) continue;
+              const [latStr, lngStr] = place.position.split(',').map(s => s.trim());
+              const lat = parseFloat(latStr);
+              const lng = parseFloat(lngStr);
+              if (isNaN(lat) || isNaN(lng)) continue;
+              const loc = { lat, lng };
+              const marker = new markerWithLabel.MarkerWithLabel({
+                position: loc,
+                map: map,
+                title: place.name,
+                icon: {
+                  url: place.icon,
+                  scaledSize: new google.maps.Size(24, 24)
+                },
+                labelContent: `<div>${place.organization} ${place.number}<br>${place.name}</div>`, 
+                labelAnchor: new google.maps.Point(0, 0),
+                labelClass: "marker-label",
+                labelStyle: { opacity: 0.85 },
+              });
+              const infoContent = `
+                <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
+                  <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
+                  <div>${place.area || ''}</div>
+                  <div>${place.number || ''}</div>
+                </div>
+              `;
+              markers.push({
+                marker,
+                name: place.name,
+                number: place.number || "",
+                infoContent,
+              });
+              marker.addListener("click", () => {
+                sharedInfoWindow.setContent(infoContent);
+                sharedInfoWindow.open(map, marker);
+                const areaInfoDiv = document.getElementById("areaInfo");
+                areaInfoDiv.textContent = `エリア: ${place.area || '情報なし'}`;
+                areaInfoDiv.innerHTML = `
+                <strong>${place.organization}${place.number} ${place.name}</strong>
+                　エリア: ${place.area || '情報なし'}
+                　タイプ: ${place.type || '不明'}
+                　周期: ${place.cycle || '情報なし'}
+                　担当: ${place.poc || '不明'}
+                　住所: ${place.address || '不明'}
+              `;
+              });
+            }
+          });
+          const clusterer = new markerClusterer.MarkerClusterer({ 
+            map: map, 
+            markers: markers.map(m => m.marker),
+            minimumClusterSize: 3, 
+            gridSize: 50,          
+          });
+        } catch (err) {
+          console.error("Firestore 読み込み失敗：", err);
+        }
+      };
+      searchInput.addEventListener("input", () => {
+        const keyword = searchInput.value.trim();
+        if (keyword) {
+          showSearchSuggestions(keyword);
+        } else {
+          searchResults.style.display = "none";
+        }
+      });
+      searchInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          const firstMatch = searchResults.querySelector("div");
+          if (firstMatch) {
+            firstMatch.click();
+            e.preventDefault();
+          }
+        }
+      });
+      searchInput.addEventListener("focus", () => {
+        searchInput.value = "";
+        searchResults.style.display = "none"; 
+      });
+      document.head.appendChild(script);
+    }
+  </script>
+</style>
+</body>
+</html>
