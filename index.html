@@ -164,7 +164,7 @@
       if (typeof logEvent === 'function' && typeof analytics !== 'undefined') {
         logEvent(analytics, 'navigate_to_allbox');
       }
-      location.href = 'allboxindex.html';
+      location.href = 'allbox.html';
     }
   </script>
 </head>
@@ -337,8 +337,7 @@
           center: { lat: 35.43, lng: 139.92 },
           zoom: 10,
         });
-
-        
+ 
         const areaInfoDiv = document.getElementById("areaInfo"); //地図を動かすと下記のinfoAreaが下記の文章になる
         map.addListener("dragstart", () => {
           areaInfoDiv.innerHTML = "地図上のピンをタップすると情報がここに表示されます。";
