@@ -43,9 +43,9 @@
     #header {
       position: relative;
       height: 60px;
+      
       background-color: #fff;
     }
-
     #pageTitle {
       position: absolute;
       top: 50%;
@@ -54,7 +54,6 @@
       margin: 0;
       font-size: 1.5rem;
     }
-
     #logoutButton {
       position: absolute;
       top: 50%;
@@ -65,42 +64,70 @@
       cursor: pointer;
       display: none;
     }
-
     #searchWrapper {
       display: flex;
-      justify-content: center;
+      justify-content: center;  
       align-items: center;
       gap: 8px;
     }
-
     #searchButton {
       background-color: #1976d2;
-      color: white;
+      color: white; 
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
-
     .marker-label {
-      background-color: #00568b;
-      color: white;
-      border: 1px solid #888;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 15px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      white-space: normal;
-      text-align: center;
+    background-color: #00568b; 
+    color: white;             
+    border: 1px solid #888;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    white-space: normal; 
+    text-align: center;  
     }
-
     #areaInfo {
+    display: none;
+    }
+    #centerCrosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin-left: -10px;
+      margin-top: -10px;
+      z-index: 9999;
+      pointer-events: none;
       display: none;
     }
+    #centerCrosshair::before,
+    #centerCrosshair::after {
+      content: "";
+      position: absolute;
+      background: red;
+    }
+    #centerCrosshair::before {
+      width: 4px;
+      height: 100%;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+    }
+    #centerCrosshair::after {
+      height: 4px;
+      width: 100%;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+    }
   </style>
-
   <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerwithlabel/dist/index.min.js"></script>
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+
 </head>
 <body>
   <div id="loginSection">
@@ -110,12 +137,10 @@
     <button onclick="login()">ログイン</button>
     <p id="loginMessage"></p>
   </div>
-
   <div id="header">
     <h2 id="pageTitle">千葉県BOX一覧MAP</h2>
     <button onclick="logout()" id="logoutButton">ログアウト</button>
   </div>
-
   <div id="mapSection">
     <div id="searchWrapper" style="margin: 10px 0; position: relative;">
       <input type="text" id="searchInput" placeholder="BOXを検索" style="padding:6px; width:250px; font-size:1rem;">
@@ -126,10 +151,10 @@
     </div>
     <div id="map"></div>
   </div>
-
   <div id="areaInfo" style="padding:10px; font-size:16px; background:#f0f0f0; border-top:1px solid #ccc;">
     地図上のピンか吹き出しをタップすると情報が表示されます。
   </div>
+  <div id="centerCrosshair"></div> 
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
@@ -151,7 +176,6 @@
     const auth = getAuth();
     const db = getFirestore(app);
     const analytics = getAnalytics(app);
-
     window.login = async function () {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
@@ -161,9 +185,7 @@
         document.getElementById("loginMessage").innerText = "ログイン失敗: " + error.message;
       }
     };
-
     window.logout = () => signOut(auth);
-
     onAuthStateChanged(auth, (user) => {
       if (user) {
         document.getElementById("loginSection").style.display = "none";
@@ -185,22 +207,32 @@
       let map;
       const markers = [];
       const searchInput = document.getElementById("searchInput");
+      const searchButton = document.getElementById("searchButton");
       const searchResults = document.getElementById("searchResults");
+      function showCrosshair() {
+        const crosshair = document.getElementById("centerCrosshair");
+        crosshair.style.display = "block";            
+        const removeOnMove = () => {
+          crosshair.style.display = "none";
+          google.maps.event.removeListener(dragListener);
+          google.maps.event.removeListener(zoomListener);
+        };
+        const dragListener = map.addListener("dragstart", removeOnMove);
+        const zoomListener = map.addListener("zoom_changed", removeOnMove);
+      }
 
       function showSearchSuggestions(keyword) {
         const lower = keyword.toLowerCase();
         const matches = markers.filter(m => {
-          const nameMatch = m.name && m.name.toLowerCase().includes(lower);
-          const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
-          return nameMatch || numberMatch;
+        const nameMatch = m.name && m.name.toLowerCase().includes(lower);
+        const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
+        return nameMatch || numberMatch;
         });
-
         if (matches.length === 0) {
           searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
           searchResults.style.display = "block";
           return;
         }
-
         searchResults.innerHTML = "";
         matches.forEach((m) => {
           const item = document.createElement("div");
@@ -208,29 +240,32 @@
           item.style.padding = "6px";
           item.style.cursor = "pointer";
           item.style.borderBottom = "1px solid #eee";
-          item.addEventListener("mouseover", () => item.style.backgroundColor = "#f0f0f0");
-          item.addEventListener("mouseout", () => item.style.backgroundColor = "");
+          item.addEventListener("mouseover", () => {
+            item.style.backgroundColor = "#f0f0f0";
+          });
+          item.addEventListener("mouseout", () => {
+            item.style.backgroundColor = "";
+          });
           item.addEventListener("click", () => {
             map.panTo(m.marker.getPosition());
-            map.setZoom(15);
+            map.setZoom(15); 
             sharedInfoWindow.setContent(m.infoContent);
             sharedInfoWindow.open(map, m.marker);
             searchResults.style.display = "none";
             searchInput.value = m.name;
+            searchInput.blur(); 
+            showCrosshair(); 
             logEvent(analytics, 'search_used');
           });
           searchResults.appendChild(item);
         });
-
         searchResults.style.display = "block";
       }
-
       const script = document.createElement("script");
       script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyAPt-pLv7Inih-UAASbfuwdKdEpyDzZT7I&callback=initMap";
       script.async = true;
-
+    
       let sharedInfoWindow;
-
       window.initMap = async () => {
         map = new google.maps.Map(document.getElementById("map"), {
           center: { lat: 35.43, lng: 139.92 },
@@ -245,11 +280,11 @@
             strictBounds: false
           }
         });
-
-        const areaInfoDiv = document.getElementById("areaInfo");
+	const areaInfoDiv = document.getElementById("areaInfo");
         map.addListener("dragstart", () => {
           areaInfoDiv.innerHTML = "地図上のピンをタップすると情報がここに表示されます。";
         });
+
         map.addListener("zoom_changed", () => {
           areaInfoDiv.innerHTML = "地図上のピンをタップすると情報がここに表示されます。";
         });
@@ -260,14 +295,17 @@
           const snapshot = await getDocs(collection(db, "mapAllBox"));
           snapshot.forEach((doc) => {
             const data = doc.data();
+
             for (const key in data) {
               const place = data[key];
               if (!place.position || !place.name) continue;
-              const [lat, lng] = place.position.split(',').map(s => parseFloat(s.trim()));
+
+              const [latStr, lngStr] = place.position.split(',').map(s => s.trim());
+              const lat = parseFloat(latStr);
+              const lng = parseFloat(lngStr);
               if (isNaN(lat) || isNaN(lng)) continue;
 
               const loc = { lat, lng };
-
               const marker = new markerWithLabel.MarkerWithLabel({
                 position: loc,
                 map: map,
@@ -276,12 +314,11 @@
                   url: place.icon,
                   scaledSize: new google.maps.Size(24, 24)
                 },
-                labelContent: `<div>${place.organization} ${place.number}<br>${place.name}</div>`,
+                labelContent: `<div>${place.organization} ${place.number}<br>${place.name}</div>`, 
                 labelAnchor: new google.maps.Point(0, 0),
-                labelClass: "marker-label",
+                labelClass: "marker-label", 
                 labelStyle: { opacity: 0.85 },
               });
-
               const infoContent = `
                 <div style="margin:0; padding:0; line-height:1.1; font-size:13px;">
                   <div style="font-weight:bold; margin-bottom:2px;">${place.name}</div>
@@ -290,28 +327,33 @@
                 </div>
               `;
 
-              markers.push({ marker, name: place.name, number: place.number || "", infoContent });
-
+              markers.push({
+                marker,
+                name: place.name,
+                number: place.number || "",
+                infoContent,
+              });
               marker.addListener("click", () => {
                 sharedInfoWindow.setContent(infoContent);
-                sharedInfoWindow.open(map, marker);
+                sharedInfoWindow.open(map, marker);      
+                const areaInfoDiv = document.getElementById("areaInfo");
+                areaInfoDiv.textContent = `エリア: ${place.area || '情報なし'}`;
                 areaInfoDiv.innerHTML = `
-                  <strong>${place.organization}${place.number} ${place.name}</strong>
-                  　エリア: ${place.area || '情報なし'}
-                  　タイプ: ${place.type || '不明'}
-                  　周期: ${place.cycle || '情報なし'}
-                  　担当: ${place.poc || '不明'}
-                  　住所: ${place.address || '不明'}
-                `;
+                <strong>${place.organization}${place.number} ${place.name}</strong>
+                　エリア: ${place.area || '情報なし'}
+                　タイプ: ${place.type || '不明'}
+                　周期: ${place.cycle || '情報なし'}
+                　担当: ${place.poc || '不明'}
+                　住所: ${place.address || '不明'}
+              `;
               });
             }
           });
-
-          const clusterer = new markerClusterer.MarkerClusterer({
-            map: map,
+          const clusterer = new markerClusterer.MarkerClusterer({ 
+            map: map, 
             markers: markers.map(m => m.marker),
-            minimumClusterSize: 3,
-            gridSize: 50,
+            minimumClusterSize: 3,  
+            gridSize: 50,         
           });
         } catch (err) {
           console.error("Firestore 読み込み失敗：", err);
@@ -320,8 +362,11 @@
 
       searchInput.addEventListener("input", () => {
         const keyword = searchInput.value.trim();
-        if (keyword) showSearchSuggestions(keyword);
-        else searchResults.style.display = "none";
+        if (keyword) {
+          showSearchSuggestions(keyword);
+        } else {
+          searchResults.style.display = "none";
+        }
       });
 
       searchInput.addEventListener("keydown", function (e) {
@@ -333,14 +378,14 @@
           }
         }
       });
-
       searchInput.addEventListener("focus", () => {
         searchInput.value = "";
-        searchResults.style.display = "none";
+        searchResults.style.display = "none"; 
       });
 
       document.head.appendChild(script);
     }
   </script>
+</style>
 </body>
 </html>
