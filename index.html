@@ -159,6 +159,14 @@
 
   <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerwithlabel/dist/index.min.js"></script>
+  <script>
+    function navigateWithLog() {
+      if (typeof logEvent === 'function' && typeof analytics !== 'undefined') {
+        logEvent(analytics, 'navigate_to_allbox');
+      }
+      location.href = 'allboxindex.html';
+    }
+  </script>
 </head>
 <body>
   <div id="loginSection">
