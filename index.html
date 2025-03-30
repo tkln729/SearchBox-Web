@@ -57,8 +57,9 @@
     #searchWrapper {
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       gap: 8px;
+      position: relative;
     }
     #searchButton {
       background-color: #1976d2;
@@ -66,6 +67,18 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+    }
+    #searchResults {
+      position: absolute;
+      top: 38px;
+      left: 0;
+      background: #fff;
+      border: 1px solid #ccc;
+      max-height: 200px;
+      overflow-y: auto;
+      width: 250px;
+      z-index: 1000;
+      display: none;
     }
     .marker-label {
       background-color: #00568b;
@@ -133,7 +146,7 @@
     <div id="searchWrapper">
       <input type="text" id="searchInput" placeholder="BOXを検索">
       <button id="searchButton">検索</button>
-      <div id="searchResults" style="background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto; position:absolute; top:40px; z-index:1000; width:250px; display:none;"></div>
+      <div id="searchResults"></div>
     </div>
     <div id="map"></div>
   </div>
@@ -141,6 +154,7 @@
   <div id="centerCrosshair"></div>
 
   <script type="module">
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
@@ -335,9 +349,9 @@
       else document.getElementById("searchResults").style.display = "none";
     });
 
-    document.getElementById("searchButton").addEventListener("click", () => {
-      const keyword = document.getElementById("searchInput").value.trim();
-      if (keyword) getSearchSuggestions(keyword);
+    document.getElementById("searchInput").addEventListener("focus", () => {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("searchResults").style.display = "none";
     });
   </script>
 </body>
