@@ -98,6 +98,39 @@
     #areaInfo {
     display: none;
     }
+    /*センターに十字線おく*/
+    #centerCrosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin-left: -10px;
+      margin-top: -10px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    #centerCrosshair::before,
+    #centerCrosshair::after {
+      content: "";
+      position: absolute;
+      background: red;
+    }
+    #centerCrosshair::before {
+      width: 2px;
+      height: 100%;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+    }
+    #centerCrosshair::after {
+      height: 2px;
+      width: 100%;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+    }
+
 
   </style>
 
@@ -131,8 +164,10 @@
     <div id="map"></div>
   </div>
   <div id="areaInfo" style="padding:10px; font-size:16px; background:#f0f0f0; border-top:1px solid #ccc;">
-    地図上のピンか吹き出しをタップすると情報がここに表示されます。
+    地図上のピンか吹き出しをタップすると情報が表示されます。
   </div>
+  <div id="centerCrosshair"></div> <!--センターに十字線つける-->
+
   
 
   <script type="module">
@@ -194,6 +229,21 @@
       const searchButton = document.getElementById("searchButton");
       const searchResults = document.getElementById("searchResults");
 
+
+      function showCrosshair() {
+        const crosshair = document.getElementById("centerCrosshair");
+        crosshair.style.display = "block";
+            // 地図が動いたら消す
+        const removeOnMove = () => {
+          crosshair.style.display = "none";
+          google.maps.event.removeListener(dragListener);
+          google.maps.event.removeListener(zoomListener);
+        };
+
+        const dragListener = map.addListener("dragstart", removeOnMove);
+        const zoomListener = map.addListener("zoom_changed", removeOnMove);
+      }
+
       function showSearchSuggestions(keyword) {
         const lower = keyword.toLowerCase();
         //const matches = markers.filter(m => m.name && m.name.toLowerCase().includes(lower));
@@ -234,6 +284,7 @@
             sharedInfoWindow.open(map, m.marker);
             searchResults.style.display = "none";
             searchInput.value = m.name;
+            showCrosshair(); // ← 画面中央に十字線追加
             logEvent(analytics, 'search_used');
           });
           searchResults.appendChild(item);
