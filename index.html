@@ -154,6 +154,7 @@
     <h2 id="pageTitle">千葉県BOX一覧MAP</h2>
     <button onclick="logout()" id="logoutButton">ログアウト</button>
   </div>
+  <button onclick="clearMarkers()">マーカークリア</button>
   <div id="mapSection">
     <div id="searchWrapper" style="margin: 10px 0; position: relative;">
       <input type="text" id="searchInput" placeholder="BOXを検索" style="padding:6px; width:250px; font-size:1rem;">
@@ -225,7 +226,7 @@
 
     function loadGoogleMaps() {
       let map;
-      const markers = [];
+      const displayedMarkers = [];
       const markersData = [];
       const searchInput = document.getElementById("searchInput");
       const searchButton = document.getElementById("searchButton");
@@ -247,26 +248,28 @@
       }
 
       function showSearchSuggestions(keyword) {
-        const lower = keyword.toLowerCase();
-        const matches = markersData.filter(m => {
-          const nameMatch = m.name && m.name.toLowerCase().includes(lower);
-          const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
-          return nameMatch || numberMatch;
-        });
+  const lower = keyword.toLowerCase();
+  const matches = markersData.filter(m => {
+    const nameMatch = m.name && m.name.toLowerCase().includes(lower);
+    const numberMatch = m.number && m.number.toString().toLowerCase().includes(lower);
+    return nameMatch || numberMatch;
+  });
 
+  if (matches.length === 0) {
+    searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
+    searchResults.style.display = "block";
+    return;
+  }
 
-        // マーカーをすべて削除しておく
-        markers.forEach(m => m.marker.setMap(null));
-          markers.length = 0; // マーカーリストを空に
-
-          if (matches.length === 0) {
-            searchResults.innerHTML = "<div style='padding:6px; color:#666;'>候補が見つかりません</div>";
-            searchResults.style.display = "block";
-            return;
-          }
-        
   searchResults.innerHTML = "";
   matches.forEach((m) => {
+
+    // すでに表示済みならスキップ
+    const isAlreadyDisplayed = displayedMarkers.some(dm =>
+      dm.name === m.name && dm.number === m.number
+    );
+    if (isAlreadyDisplayed) return;
+
     const marker = new markerWithLabel.MarkerWithLabel({
       position: m.loc,
       map: map,
@@ -285,7 +288,6 @@
     marker.addListener("click", () => {
       sharedInfoWindow.setContent(m.infoContent);
       sharedInfoWindow.open(map, marker);
-
       const areaInfoDiv = document.getElementById("areaInfo");
       areaInfoDiv.innerHTML = `
         <strong>${m.organization}${m.number} ${m.name}</strong>
@@ -297,9 +299,8 @@
       `;
     });
 
-    // 表示中のマーカーリストに追加
-    markers.push({ marker });
-
+    displayedMarkers.push({ marker, name: m.name, number: m.number }); // ← 登録！
+    
     const item = document.createElement("div");
     item.textContent = m.name;
     item.style.padding = "6px";
@@ -434,6 +435,12 @@
 
       document.head.appendChild(script);
     }
+
+    window.clearMarkers = () => {
+  displayedMarkers.forEach(m => m.marker.setMap(null));
+  displayedMarkers.length = 0;
+};
+
   </script>
 </style>
 </body>
